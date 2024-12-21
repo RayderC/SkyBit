@@ -1,0 +1,289 @@
+/* Global Styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #121212;
+    color: #fff;
+    margin: 0;
+    padding: 20px;
+    position: relative;
+}
+
+/* File Browser Container */
+.file-browser-container {
+    padding: 30px;
+    max-width: 900px;
+    margin: 60px auto;
+    background-color: #1e1e1e;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Header Section */
+.title-upload {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    position: relative; /* Add this to enable better positioning */
+}
+
+.title-upload h1 {
+    font-size: 24px;
+    font-weight: bold;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.title-icon {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+}
+
+.upload-toggle {
+    border-radius: 8px;
+    padding-bottom: 15px;
+}
+
+/* Container for upload and new folder buttons */
+.menu-container {
+    display: flex;
+    gap: 12px; /* Space between the buttons */
+    justify-content: flex-end; /* Align to the right */
+}
+
+.upload-button {
+    text-decoration: none;
+    background-color: #343434;
+    color: #fff;
+    border: none;
+    padding: 12px 18px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.upload-button:hover {
+    background-color: #4a4a4a;
+}
+
+.form-top {
+    border-radius: 8px 8px 0 0;
+}
+
+.form-bottom {
+    border-radius: 0 0 8px 8px;
+}
+
+.file-input {
+    display: none;
+}
+
+.text-button {
+    background: none; /* No background color */
+    border: none; /* Remove borders */
+    color: inherit; /* Inherit the text color */
+    font: inherit; /* Inherit font settings */
+    text-decoration: underline; /* Adds an underline to make it look like a link */
+    cursor: pointer; /* Shows a pointer on hover */
+    padding: 0; /* Removes padding */
+    display: inline-flex; /* Align the icon and text inline */
+    align-items: center; /* Vertically center the icon and text */
+}
+
+/* Breadcrumb Navigation */
+.file-path-viewer {
+    margin-bottom: 20px;
+    font-size: 16px;
+    color: #aaa;
+}
+
+.file-path-viewer a {
+    text-decoration: none;
+    color: #e50914;
+    transition: color 0.2s;
+}
+
+.file-path-viewer a:hover {
+    color: #b4070e;
+}
+
+/* File List Styling */
+.file-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.file-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #333;
+    border-radius: 10px;
+    padding: 14px 20px;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    transition: box-shadow 0.2s ease, background-color 0.3s;
+    cursor: pointer;
+}
+
+.file-item:hover {
+    background-color: #444;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+.file-name {
+    font-size: 16px;
+    font-weight: 500;
+    color: #fff;
+    max-width: 70%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Button Styling */
+.btn {
+    background-color: #343434;
+    color: #fff;
+    border-radius: 0; /* Default no rounded corners */
+    padding: 10px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    text-decoration: none;
+    text-align: center;
+}
+
+.btn:hover {
+    background-color: #4a4a4a;
+}
+
+/* Apply rounded corners only to the first and last buttons */
+.btn:first-child {
+    border-radius: 8px 8px 0 0; /* Rounded on the left side */
+}
+
+.btn:last-child {
+    border-radius: 0 0 8px 8px; /* Rounded on the right side */
+}
+
+/* Menu Dropdown */
+.menu-container {
+    position: relative;
+}
+
+.menu-container.active .dropdown-menu {
+    display: block;
+}
+
+/* Settings Menu */
+.settings-btn-menu {
+    position: absolute;
+    right: 20px;
+}
+
+/* dropdown menu */
+.dropdown-menu-trigger {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.2rem;
+    padding: 6px;
+    transition: color 0.3s ease, transform 0.3s ease;
+}
+
+.dropdown-menu-trigger:hover {
+    color: #e50914;
+    transform: rotate(90deg);
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 35px;
+    background-color: #2f2f2f;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    z-index: 10;
+}
+
+.dropdown-menu.active {
+    display: block;
+}
+
+.dropdown-menu a {
+    display: block;
+    padding: 12px 18px;
+    text-decoration: none;
+    color: #fff;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+.dropdown-menu a:hover {
+    background-color: #444;
+}
+
+/* File Move Container */
+.move-buttons {
+    display: flex;
+    gap: 12px; /* Space between buttons */
+}
+
+.move-buttons button {
+    padding: 12px 18px;
+    font-size: 14px;
+    background-color: #343434;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.move-buttons button:hover {
+    background-color: #4a4a4a;
+}
+
+.progress-container {
+    width: 100%;
+    background: #f3f3f3;
+    display: none;
+    border: 2px solid #ccc;
+    margin-bottom: 10px;
+    height: 20px;
+    border-radius: 12px;
+}
+
+.progress-bar {
+    width: 0%;
+    height: 20px;
+    background: #e50914;
+    text-align: center;
+    color: #fff;
+    border-radius: 12px;
+}
+
+/* Media Query for Mobile Devices */
+@media (max-width: 600px) {
+    .menu-container {
+        flex-direction: column; /* Stack the buttons vertically */
+        align-items: stretch; /* Stretch buttons to take full width */
+        gap: 8px; /* Reduce the gap between buttons */
+    }
+
+    .upload-button {
+        padding: 12px; /* Adjust padding for smaller screens */
+        font-size: 14px; /* Reduce font size */
+        justify-content: center; /* Center the content */
+        gap: 4px; /* Adjust spacing between icon and text */
+    }
+}

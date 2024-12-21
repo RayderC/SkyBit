@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ site_name }} - Manage Temporary Shares</title>
+    <link rel="shortcut icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <div class="profile-container">
+        <h1>Manage Temporary Shares</h1>
+
+        <!-- Active Temp Shares Table -->
+        <h2>Active Temp Shares</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Token</th>
+                    <th>Path</th>
+                    <th>Expires At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for token, share in active_shares.items() %}
+                    <tr>
+                        <td>{{ token }}</td>
+                        <td>{{ share.path }}</td>
+                        <td>{{ share.formatted_expires }}</td>
+                        <td>
+                            <form action="{{ url_for('admin.delete_temp_share', token=token) }}" method="POST" style="display:inline;">
+                                <button type="submit" class="manage-actions delete-btn">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                                <a href="{{ url_for('admin.edit_temp_share', token=token) }}" class="manage-actions edit-btn">
+                                <i class="fas fa-edit"></i> Edit Expiration
+                            </a>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Back to Home Button -->
+        <a href="{{ url_for('profile.profile') }}" class="btn"><i class="fas fa-arrow-left"></i> Back to Profile</a>
+    </div>
+</body>
+</html>

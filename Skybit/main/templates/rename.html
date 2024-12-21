@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ site_name }} - Rename</title>
+    <link rel="shortcut icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='rename.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <div class="rename-container">
+        <h1>Rename File/Folder</h1>
+
+        {% if error %}
+        <div class="error-message">
+            <p>{{ error }}</p>
+        </div>
+        {% endif %}
+
+        <form method="POST">
+            <div class="form-group">
+                <label for="new_name">New Name:</label>
+                <input type="text" id="new_name" name="new_name" value="{{ filepath }}" required>
+            </div>
+            <div class="actions">
+                <button type="submit" class="btn">Rename</button>
+                <a href="{{ url_for('main.home', folder=current_folder) }}" class="btn"><i class="fas fa-times"></i> Cancel</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

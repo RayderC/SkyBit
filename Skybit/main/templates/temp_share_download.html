@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ site_name }}</title>
+    <link rel="shortcut icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='rename.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <div class="rename-container">
+        <!-- File/Folder Download Section -->
+        {% if type == "file" %}
+            <h1>Download <strong>{{ file_name }}</strong></h1>
+            <p class="expiration-time">This link will expire in <strong>{{ expiration_time }}</strong> minutes.</p>
+            <form method="POST" action="{{ url_for('main.access_temp_share', token=token) }}">
+                <button type="submit" class="btn">Download File</button>
+            </form>
+        {% elif type == "folder" %}
+            <h1>Download <strong>{{ zip_file_name }}</strong></h1>
+            <p class="expiration-time">This link will expire in <strong>{{ expiration_time }}</strong> minutes.</p>
+            <form method="POST" action="{{ url_for('main.access_temp_share', token=token) }}">
+                <button type="submit" class="btn">Download Folder</button>
+            </form>
+        {% else %}
+            <p>Invalid share request.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

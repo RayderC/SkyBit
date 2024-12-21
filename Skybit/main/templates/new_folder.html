@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ site_name }} - New Folder</title>
+    <link rel="shortcut icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='rename.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <div class="rename-container">
+        <h1>Create New Folder</h1>
+        <form method="POST">
+            <div class="form-group">
+                <label for="folder_name">Folder Name:</label>
+                <input type="text" id="folder_name" name="folder_name" placeholder="Enter folder name" required>
+            </div>
+            <div class="actions">
+                <button type="submit" class="btn"><i class="fas fa-folder-plus"></i> Create</button>
+                <a href="{{ url_for('main.home', folder=current_folder) }}" class="btn"><i class="fas fa-times"></i> Cancel</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

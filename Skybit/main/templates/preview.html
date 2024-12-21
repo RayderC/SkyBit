@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ site_name }} - Preview - {{ filepath }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='preview.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="shortcut icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.png') }}">
+    <script>
+        function submitForm() {
+            var content = document.getElementById("editable-content").value;
+            // Ensure there are no unwanted trailing newlines before submission
+            content = content.replace(/\n+$/, '');  // Remove trailing newlines
+            document.getElementById("editable-content").value = content;
+            document.getElementById("file-edit-form").submit();
+        }
+    </script>
+</head>
+<body>
+    <div class="preview-container">
+        <h1>Preview of {{ filepath }}</h1>
+
+        <div class="action-buttons">
+            <a href="{{ url_for('main.home', folder=current_folder) }}" class="btn">Go back</a>
+            <a href="{{ url_for('main.download', filepath=filepath) }}" class="btn" download>Download</a>
+            <a href="{{ url_for('main.confirm_delete', filepath=filepath) }}" class="btn">Delete</a>
+
+            {% if file_type == 'text' %}
+                <button type="button" class="btn" onclick="submitForm()">Save Changes</button>
+            {% endif %}
+        </div>
+
+        {% if file_type == 'image' %}
+            <img src="{{ url_for('main.download', filepath=filepath) }}" alt="Image Preview">
+
+        {% elif file_type == 'text' %}
+            {% if role in ['admin', 'mod'] %}
+                <form id="file-edit-form" action="{{ url_for('main.save_file', filepath=filepath) }}" method="POST">
+                    <textarea id="editable-content" name="content" rows="20" style="width: 100%;">{{ content }}</textarea>
+                </form>
+            {% else %}
+                <pre>{{ content }}</pre>
+            {% endif %}
+
+        {% elif file_type == 'audio' %}
+            <audio controls>
+                <source src="{{ url_for('main.download', filepath=filepath) }}" type="audio/{{ filepath.split('.')[-1] }}">
+                Your browser does not support the audio element.
+            </audio>
+
+        {% elif file_type == 'video' %}
+            <video controls width="100%">
+                <source src="{{ url_for('main.download', filepath=filepath) }}" type="video/{{ filepath.split('.')[-1] }}">
+                Your browser does not support the video tag.
+            </video>
+
+        {% elif file_type == 'spreadsheet' or file_type == 'presentation' %}
+            <p>This is a {{ file_type }} file. Please download it to view.</p>
+            <i class="fas fa-file"></i>
+
+        {% elif file_type == 'archive' %}
+            <p>This is an archive file. Please download it to extract its contents.</p>
+            <i class="fas fa-file-archive"></i>
+
+        {% elif file_type == 'markup' %}
+            <pre>{{ content }}</pre>
+
+        {% else %}
+            <h1>File type not supported for preview.</h1>
+        {% endif %}
+    </div>
+</body>
+</html>

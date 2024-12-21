@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ site_name }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="shortcut icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.png') }}">
+    <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/draganddrop.js') }}" defer></script>
+</head>
+<style>
+    .dragover {
+        border: 2px dashed #e50914;
+    }
+</style>
+<body>
+    <!-- Settings Icon with Dropdown -->
+    <button class="dropdown-menu-trigger" onclick="window.location.href='{{ url_for('profile.profile') }}'">
+        <i class="fas fa-cog"></i>
+    </button>
+
+    <!-- File Browser -->
+    <div id="drop-area" class="file-browser-container">
+        <div class="title-upload">
+            <h1>
+                <img src="{{ url_for('static', filename='favicon.png') }}" alt="Skybit Icon" class="title-icon">
+                {{ site_name }}
+            </h1>
+            {% if role in ['admin', 'mod'] %}
+            <div class="menu-container">
+                <a href="{{ url_for('main.new_folder', folder=current_folder) }}" class="upload-button upload-toggle">
+                    <i class="fas fa-folder-plus"></i> New Folder
+                </a>
+                <button class="upload-button upload-toggle" aria-label="Upload" onclick="toggleMenu(event, this)">
+                    <i class="fas fa-upload"></i> Upload
+                </button>
+                <div class="dropdown-menu">
+                    <div class="upload-area">
+                        <form id="uploadForm" action="{{ url_for('main.upload_files_route') }}" method="POST" enctype="multipart/form-data">
+                            <input type="hidden" name="current_folder" value="{{ current_folder }}">
+                            <label for="upload-files" class="upload-button form-top"><i class="fas fa-upload"></i> Upload Files</label>
+                            <input type="file" id="upload-files" class="file-input" name="files" multiple>
+                        </form>
+                        <form action="{{ url_for('main.upload_folder_route') }}" method="POST" enctype="multipart/form-data">
+                            <input type="hidden" name="current_folder" value="{{ current_folder }}">
+                            <label for="upload-folder" class="upload-button form-bottom"><i class="fas fa-upload"></i> Upload Folder</label>
+                            <input type="file" id="upload-folder" class="file-input" name="file" webkitdirectory directory multiple>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Move File Container -->
+        <div id="move-container" style="display: {{ 'block' if selected_file else 'none' }}; padding-bottom: 15px;">
+            <p><strong>Selected File:</strong> <span id="selected-file">{{ selected_file }}</span></p>
+            <form id="move-form" method="POST" action="{{ url_for('main.move_file') }}">
+                <input type="hidden" name="selected_file" id="move-selected-file" value="{{ selected_file }}">
+                <input type="hidden" name="destination_folder" value="{{ current_folder }}">
+                <div class="move-buttons">
+                    <button type="submit">Move Here</button>
+                    <button type="button" onclick="window.location.href='{{ url_for('main.home', folder=current_folder) }}'">Cancel</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Progress Bar -->
+        <div id="upload-status"></div>
+        <div id="progress-bar-container" class="progress-container">
+            <div id="progress-bar" class="progress-bar"></div>
+        </div>
+
+        <div class="file-path-viewer">
+            {% set folder_parts = current_folder.split('/') if current_folder else [] %}
+            <span><a href="{{ url_for('main.home', folder='/', selected_file=selected_file) }}">Home</a></span>
+            {% for index in range(folder_parts | length) %}
+                &nbsp;/&nbsp;
+                <span>
+                    <a href="{{ url_for('main.home', folder='/'.join(folder_parts[:index + 1]), selected_file=selected_file) }}">{{ folder_parts[index] }}</a>
+                </span>
+            {% endfor %}
+        </div>
+
+        <ul class="file-list">
+            {% for file in files %}
+            <li class="file-item" data-href="{% if file.is_dir %}
+                {{ url_for('main.home', folder=(current_folder + '/' + file.name).strip('/'), selected_file=selected_file) }}
+            {% else %}
+                {{ url_for('main.preview', filepath=(current_folder + '/' + file.name).strip('/')) }}
+            {% endif %}">
+                <span class="file-name">{{ file.name }}{% if file.is_dir %}/{% endif %}</span>
+                <div class="menu-container">
+                    <button class="dropdown-menu-trigger" aria-label="More Options" onclick="toggleMenu(event, this)">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <div class="dropdown-menu">
+                        {% if role in ['admin', 'mod'] %}
+                        <a class="btn" href="{{ url_for('main.rename', filepath=(current_folder + '/' + file.name)|trim('/')) }}"><i class="fas fa-edit"></i> Rename</a>
+                        <a class="btn" href="#" data-filepath="{{ current_folder }}/{{ file.name|trim('/') }}" onclick="selectFileToMove(event)"><i class="fas fa-folder-open"></i> Move</a>
+                        <a class="btn" href="{{ url_for('main.download', filepath=(current_folder + '/' + file.name)|trim('/')) }}"><i class="fas fa-download"></i> Download</a>
+                        <a class="btn" href="{{ url_for('main.temp_share_page', filepath=(current_folder + '/' + file.name)|trim('/')) }}"><i class="fas fa-share"></i> Temp. Share</a>
+                        <a class="btn" href="{{ url_for('main.confirm_delete', filepath=(current_folder + '/' + file.name)|trim('/')) }}"><i class="fas fa-trash"></i> Delete</a>
+                        {% endif %}
+                        {% if role == 'user' %}
+                        <a class="upload-button upload-toggle" href="{{ url_for('main.download', filepath=(current_folder + '/' + file.name)|trim('/')) }}"><i class="fas fa-download"></i> Download</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</body>
+</html>
