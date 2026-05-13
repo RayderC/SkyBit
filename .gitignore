@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+
+# Runtime data (user files + database — mount as volumes)
+data/
+config/data.json
+
+# Env / secrets
+.env
+.env.local
+.env.production
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Claude internal
+.claude/
+
+# Python leftovers
+__pycache__/
+*.py[cod]
+.venv/
+
+# OS
+Thumbs.db
+.DS_Store

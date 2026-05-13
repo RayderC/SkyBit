@@ -1,0 +1,16 @@
+.git/
+.gitignore
+.idea/
+.venv/
+__pycache__/
+*.py
+*.pyc
+requirements.txt
+node_modules/
+.next/
+npm-debug.log*
+config/skybit.db
+data/
+Amethyst/
+README.md
+.env*.local
