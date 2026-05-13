@@ -47,13 +47,7 @@ services:
       - "7070:7070"
     volumes:
       - /path/to/your/files:/data
-      - skybit-config:/app/config
-    environment:
-      SECRET_KEY: change-this-to-a-long-random-string
-      SITE_NAME: SkyBit
-
-volumes:
-  skybit-config:
+      - /path/to/config:/app/config
 ```
 
 ---
