@@ -210,7 +210,7 @@ export default function FileBrowser({ folder }: Props) {
       setNewFileMode(false);
       setNewFileName('');
       loadFiles();
-      const previewPath = (folder ? `${folder}/${data.name}` : data.name).split('/').map(s => encodeURIComponent(s)).join('/');
+      const previewPath = (folder ? `${folder}/${data.name}` : data.name).split('/').map((s: string) => encodeURIComponent(s)).join('/');
       router.push(`/preview/${previewPath}`);
     }
   }
