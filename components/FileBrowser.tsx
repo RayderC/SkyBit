@@ -71,7 +71,8 @@ export default function FileBrowser({ folder }: Props) {
     setLoading(true);
     Promise.all([
       fetch(`/api/files/list?folder=${encodeURIComponent(folder)}`).then(r => {
-        if (!r.ok) throw new Error('Not authenticated');
+        if (r.status === 401) throw new Error('Not authenticated');
+        if (!r.ok) throw new Error(`Failed to load folder (${r.status})`);
         return r.json();
       }),
     ]).then(([data]) => {
@@ -85,9 +86,12 @@ export default function FileBrowser({ folder }: Props) {
       setViewMode(data.isImageFolder ? 'gallery' : 'list');
       setLoading(false);
     }).catch((e: Error) => {
-      if (e.message === 'Not authenticated') router.push('/login');
-      setError(e.message);
-      setLoading(false);
+      if (e.message === 'Not authenticated') {
+        router.push('/login');
+      } else {
+        setError(e.message);
+        setLoading(false);
+      }
     });
   }
 
@@ -190,6 +194,26 @@ export default function FileBrowser({ folder }: Props) {
     loadFiles();
   }
 
+  // New file
+  const [newFileMode, setNewFileMode] = useState(false);
+  const [newFileName, setNewFileName] = useState('');
+
+  async function handleNewFile(e: React.FormEvent) {
+    e.preventDefault();
+    const res = await fetch('/api/files/new-file', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ folder, name: newFileName }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setNewFileMode(false);
+      setNewFileName('');
+      loadFiles();
+      router.push(`/preview/${folder ? folder + '/' : ''}${data.name}`);
+    }
+  }
+
   // Drag and drop upload
   function handleDragOver(e: React.DragEvent) { e.preventDefault(); setDragging(true); }
   function handleDragLeave() { setDragging(false); }
@@ -260,8 +284,11 @@ export default function FileBrowser({ folder }: Props) {
 
         {canWrite && (
           <>
-            <button className="btn btn-ghost btn-sm" onClick={() => setNewFolderMode(!newFolderMode)}>
+            <button className="btn btn-ghost btn-sm" onClick={() => { setNewFolderMode(!newFolderMode); setNewFileMode(false); }}>
               📁+ Folder
+            </button>
+            <button className="btn btn-ghost btn-sm" onClick={() => { setNewFileMode(!newFileMode); setNewFolderMode(false); }}>
+              📄+ File
             </button>
             <label className="btn btn-primary btn-sm" style={{ cursor: 'pointer' }}>
               ⬆ Upload
@@ -295,6 +322,23 @@ export default function FileBrowser({ folder }: Props) {
           />
           <button type="submit" className="btn btn-primary btn-sm">Create</button>
           <button type="button" className="btn btn-ghost btn-sm" onClick={() => setNewFolderMode(false)}>Cancel</button>
+        </form>
+      )}
+
+      {/* New file inline form */}
+      {newFileMode && (
+        <form onSubmit={handleNewFile} style={{ display: 'flex', gap: 8, marginBottom: 12, alignItems: 'center' }}>
+          <input
+            className="form-input"
+            value={newFileName}
+            onChange={e => setNewFileName(e.target.value)}
+            placeholder="filename.txt"
+            autoFocus
+            style={{ maxWidth: 260, height: 36 }}
+            required
+          />
+          <button type="submit" className="btn btn-primary btn-sm">Create</button>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setNewFileMode(false)}>Cancel</button>
         </form>
       )}
 
@@ -340,6 +384,11 @@ export default function FileBrowser({ folder }: Props) {
               onOpenMoveModal={(path) => setMoveTarget(path)}
               onOpenCopyModal={(path) => setCopyTarget(path)}
               onOpenShareModal={(path) => { setShareTarget(path); setShareLink(''); }}
+              onOpenImage={(path) => {
+                const idx = imageFiles.findIndex(f => f.path === path);
+                if (idx >= 0) setLightboxIndex(idx);
+                else router.push(`/preview/${path}`);
+              }}
             />
           ))}
         </ul>

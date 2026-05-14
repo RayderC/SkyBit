@@ -113,6 +113,7 @@ export default function AdminPage() {
       )}
 
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+        <div style={{ overflowX: 'auto' }}>
         <table className="data-table">
           <thead>
             <tr>
@@ -154,6 +155,7 @@ export default function AdminPage() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {editUser && (

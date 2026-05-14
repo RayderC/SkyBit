@@ -40,11 +40,20 @@ if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
 
 // ── Read / Write ─────────────────────────────────────────────────────────────
 
+function fresh(): DbData {
+  return { users: [], tempShares: [], config: {}, nextUserId: 1 };
+}
+
 function read(): DbData {
   try {
+    if (!fs.existsSync(dbFile)) return fresh();
     return JSON.parse(fs.readFileSync(dbFile, 'utf8'));
   } catch {
-    return { users: [], tempShares: [], config: {}, nextUserId: 1 };
+    try {
+      fs.renameSync(dbFile, `${dbFile}.bak.${Date.now()}`);
+      console.log('[SkyBit] Corrupted data.json backed up — starting fresh');
+    } catch { /* ignore rename failure */ }
+    return fresh();
   }
 }
 

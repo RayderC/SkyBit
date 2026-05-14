@@ -1,3 +1,5 @@
+export const config = { api: { responseLimit: false } };
+
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getIronSession } from 'iron-session';
 import { sessionOptions, SessionData } from '@/lib/session';

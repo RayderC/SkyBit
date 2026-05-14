@@ -29,7 +29,7 @@ export const TEXT_EXTS = new Set([
   '.gitignore', '.dockerfile', '.toml', '.rs', '.go', '.java', '.c', '.cpp', '.h',
 ]);
 
-export type FileType = 'image' | 'video' | 'audio' | 'text' | 'archive' | 'other';
+export type FileType = 'image' | 'video' | 'audio' | 'text' | 'pdf' | 'archive' | 'other';
 
 export function getFileType(filename: string): FileType {
   const ext = path.extname(filename).toLowerCase();
@@ -37,6 +37,7 @@ export function getFileType(filename: string): FileType {
   if (VIDEO_EXTS.has(ext)) return 'video';
   if (AUDIO_EXTS.has(ext)) return 'audio';
   if (TEXT_EXTS.has(ext)) return 'text';
+  if (ext === '.pdf') return 'pdf';
   if (['.zip', '.rar', '.tar', '.gz', '.7z', '.bz2', '.xz'].includes(ext)) return 'archive';
   return 'other';
 }

@@ -132,6 +132,14 @@ export default function PreviewPage({ params }: Props) {
           )
         )}
 
+        {fileData?.fileType === 'pdf' && (
+          <iframe
+            src={downloadUrl}
+            title={filename}
+            style={{ width: '100%', height: '80vh', border: 'none', display: 'block' }}
+          />
+        )}
+
         {fileData?.fileType === 'archive' && (
           <div style={{ padding: 32, textAlign: 'center', color: 'var(--text-muted)' }}>
             <div style={{ fontSize: 3 + 'rem', marginBottom: 16 }}>📦</div>
