@@ -9,7 +9,7 @@ interface Props {
 
 export default function PreviewPage({ params }: Props) {
   const { filepath } = use(params);
-  const filePath = filepath ? filepath.join('/') : '';
+  const filePath = filepath ? filepath.map(s => decodeURIComponent(s)).join('/') : '';
   const router = useRouter();
 
   const [fileData, setFileData] = useState<{
@@ -77,7 +77,7 @@ export default function PreviewPage({ params }: Props) {
           </h1>
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <a href={folder ? `/${folder}` : '/'} className="btn btn-ghost btn-sm">← Back</a>
+          <a href={folder ? `/${folder.split('/').map(s => encodeURIComponent(s)).join('/')}` : '/'} className="btn btn-ghost btn-sm">← Back</a>
           <a href={downloadUrl} download className="btn btn-secondary btn-sm">Download</a>
           {['admin', 'mod'].includes(role) && fileData?.fileType === 'text' && (
             <button className="btn btn-primary btn-sm" onClick={handleSave}>

@@ -6,6 +6,6 @@ interface Props {
 
 export default async function FolderPage({ params }: Props) {
   const { folder } = await params;
-  const folderPath = folder ? folder.join('/') : '';
+  const folderPath = folder ? folder.map(s => decodeURIComponent(s)).join('/') : '';
   return <FileBrowser folder={folderPath} />;
 }
