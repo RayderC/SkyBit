@@ -5,9 +5,31 @@ import { resolveSafePath, IMAGE_EXTS, RAW_EXTS } from '@/lib/fs';
 import fs from 'fs';
 import path from 'path';
 import archiver from 'archiver';
-import { spawnSync } from 'child_process';
 
 export const config = { api: { responseLimit: false } };
+
+// Scan binary data for embedded JPEGs and return the largest one found.
+// All modern RAW formats (ARW, CR2, NEF, DNG …) embed a JPEG preview
+// at a known offset inside the file. JPEG entropy-coded data cannot
+// contain 0xFF 0xD9 unless it is the actual End-Of-Image marker, so
+// the first EOI found after each SOI is the true end of that JPEG.
+const SOI = Buffer.from([0xff, 0xd8, 0xff]);
+const EOI = Buffer.from([0xff, 0xd9]);
+
+function extractLargestJpeg(data: Buffer): Buffer | null {
+  let best: Buffer | null = null;
+  let offset = 0;
+  while (offset < data.length - 3) {
+    const start = data.indexOf(SOI, offset);
+    if (start < 0) break;
+    const end = data.indexOf(EOI, start + 4);
+    if (end < 0) break;
+    const candidate = data.subarray(start, end + 2);
+    if (!best || candidate.length > best.length) best = candidate;
+    offset = start + 3;
+  }
+  return best && best.length > 50 * 1024 ? best : null;
+}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Allow token-based access for temp shares (no session required)
@@ -41,21 +63,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const ext = path.extname(resolved).toLowerCase();
 
-    // RAW camera files: extract embedded JPEG preview via exiftool
+    // RAW camera files: scan for the largest embedded JPEG preview
     if (RAW_EXTS.has(ext)) {
-      for (const tag of ['-PreviewImage', '-JpgFromRaw', '-ThumbnailImage']) {
-        const r = spawnSync('exiftool', ['-b', tag, resolved], { maxBuffer: 80 * 1024 * 1024, timeout: 30000 });
-        const buf = r.stdout as Buffer;
-        if (!r.error && r.status === 0 && buf?.length > 500 && buf[0] === 0xff && buf[1] === 0xd8) {
+      try {
+        const data = await fs.promises.readFile(resolved);
+        const jpeg = extractLargestJpeg(data);
+        if (jpeg) {
           res.setHeader('Content-Type', 'image/jpeg');
           res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(path.basename(resolved, ext))}.jpg"`);
-          res.setHeader('Content-Length', buf.length);
+          res.setHeader('Content-Length', jpeg.length);
           res.setHeader('Cache-Control', 'public, max-age=3600');
-          res.end(buf);
+          res.end(jpeg);
           return;
         }
-      }
-      // exiftool not installed or no embedded JPEG — serve as raw download
+      } catch { /* fall through to raw download */ }
+      // No embedded JPEG found — offer the file as a download
       res.setHeader('Content-Type', 'application/octet-stream');
       res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(path.basename(resolved))}"`);
       res.setHeader('Content-Length', stat.size);
