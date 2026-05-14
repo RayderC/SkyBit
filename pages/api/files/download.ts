@@ -41,19 +41,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const ext = path.extname(resolved).toLowerCase();
 
-    // RAW camera files: extract embedded JPEG preview via dcraw
+    // RAW camera files: extract embedded JPEG preview via exiftool
     if (RAW_EXTS.has(ext)) {
-      const dcraw = spawnSync('dcraw', ['-e', '-c', resolved], { maxBuffer: 80 * 1024 * 1024, timeout: 30000 });
-      const buf = dcraw.stdout as Buffer | null;
-      if (!dcraw.error && dcraw.status === 0 && buf && buf.length > 100 && buf[0] === 0xff && buf[1] === 0xd8) {
-        res.setHeader('Content-Type', 'image/jpeg');
-        res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(path.basename(resolved, ext))}.jpg"`);
-        res.setHeader('Content-Length', buf.length);
-        res.setHeader('Cache-Control', 'public, max-age=3600');
-        res.end(buf);
-        return;
+      for (const tag of ['-PreviewImage', '-JpgFromRaw', '-ThumbnailImage']) {
+        const r = spawnSync('exiftool', ['-b', tag, resolved], { maxBuffer: 80 * 1024 * 1024, timeout: 30000 });
+        const buf = r.stdout as Buffer;
+        if (!r.error && r.status === 0 && buf?.length > 500 && buf[0] === 0xff && buf[1] === 0xd8) {
+          res.setHeader('Content-Type', 'image/jpeg');
+          res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(path.basename(resolved, ext))}.jpg"`);
+          res.setHeader('Content-Length', buf.length);
+          res.setHeader('Cache-Control', 'public, max-age=3600');
+          res.end(buf);
+          return;
+        }
       }
-      // dcraw not installed or no embedded JPEG — serve as raw download
+      // exiftool not installed or no embedded JPEG — serve as raw download
       res.setHeader('Content-Type', 'application/octet-stream');
       res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(path.basename(resolved))}"`);
       res.setHeader('Content-Length', stat.size);

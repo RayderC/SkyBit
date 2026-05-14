@@ -22,7 +22,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN apk add --no-cache su-exec dcraw && \
+RUN apk add --no-cache su-exec perl-image-exiftool && \
     addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
