@@ -53,7 +53,7 @@ export default function FolderTreePicker({ action, onConfirm, onCancel }: Props)
   const [selected, setSelected] = useState('');
 
   useEffect(() => {
-    fetch('/api/files/folder-tree').then(r => r.json()).then(setTree);
+    fetch('/api/files/folder-tree').then(r => r.json()).then(setTree).catch(() => setTree({ name: '/', path: '', children: [] }));
     function onKey(e: KeyboardEvent) { if (e.key === 'Escape') onCancel(); }
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);

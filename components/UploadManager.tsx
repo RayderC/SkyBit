@@ -90,7 +90,6 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
     processQueue();
   }, [processQueue]);
 
-  const visible = uploads.filter(u => u.status !== 'done' || uploads.some(x => x.status !== 'done'));
   const active = uploads.filter(u => u.status === 'uploading' || u.status === 'pending');
   const done = uploads.filter(u => u.status === 'done');
   const hasError = uploads.some(u => u.status === 'error');

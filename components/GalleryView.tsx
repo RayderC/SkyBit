@@ -1,18 +1,33 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface FileEntry {
   name: string;
   path: string;
+  isDir: boolean;
+  type: string;
 }
 
 interface Props {
-  images: FileEntry[];
+  files: FileEntry[];
+  imageFiles: FileEntry[];
   selected: Set<string>;
   selectionMode: boolean;
+  folder: string;
   onToggleSelect: (path: string) => void;
-  onOpen: (index: number) => void;
+  onOpenImage: (index: number) => void;
 }
+
+const TYPE_ICONS: Record<string, string> = {
+  folder: '📁',
+  video: '🎬',
+  audio: '🎵',
+  text: '📄',
+  pdf: '📋',
+  archive: '🗜',
+  other: '📎',
+};
 
 function LazyThumb({ src, alt }: { src: string; alt: string }) {
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -21,7 +36,6 @@ function LazyThumb({ src, alt }: { src: string; alt: string }) {
   useEffect(() => {
     const el = wrapRef.current;
     if (!el) return;
-    // Only request the image when it enters the viewport (+300px margin)
     const obs = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect(); } },
       { rootMargin: '300px' }
@@ -37,32 +51,58 @@ function LazyThumb({ src, alt }: { src: string; alt: string }) {
   );
 }
 
-export default function GalleryView({ images, selected, selectionMode, onToggleSelect, onOpen }: Props) {
+export default function GalleryView({ files, imageFiles, selected, selectionMode, folder, onToggleSelect, onOpenImage }: Props) {
+  const router = useRouter();
+
+  function handleClick(file: FileEntry) {
+    if (selectionMode) {
+      onToggleSelect(file.path);
+      return;
+    }
+    if (file.isDir) {
+      const encoded = file.path.split('/').map(s => encodeURIComponent(s)).join('/');
+      router.push(`/${encoded}`);
+    } else if (file.type === 'image') {
+      const idx = imageFiles.findIndex(f => f.path === file.path);
+      if (idx >= 0) onOpenImage(idx);
+    } else {
+      const encoded = file.path.split('/').map(s => encodeURIComponent(s)).join('/');
+      router.push(`/preview/${encoded}`);
+    }
+  }
+
   return (
     <div className="gallery-grid">
-      {images.map((img, i) => {
-        const thumbUrl = `/api/files/thumb?path=${encodeURIComponent(img.path)}`;
-        const isSelected = selected.has(img.path);
+      {files.map((file) => {
+        const isSelected = selected.has(file.path);
+        const icon = TYPE_ICONS[file.isDir ? 'folder' : file.type] ?? '📎';
+
         return (
           <div
-            key={img.path}
-            className={`gallery-item ${isSelected ? 'selected' : ''}`}
-            onClick={() => {
-              if (selectionMode) onToggleSelect(img.path);
-              else onOpen(i);
-            }}
+            key={file.path}
+            className={`gallery-item${isSelected ? ' selected' : ''}${file.isDir ? ' gallery-item-folder' : ''}`}
+            onClick={() => handleClick(file)}
           >
             {selectionMode && (
               <input
                 type="checkbox"
                 className="gallery-item-checkbox"
                 checked={isSelected}
-                onChange={() => onToggleSelect(img.path)}
+                onChange={() => onToggleSelect(file.path)}
                 onClick={e => e.stopPropagation()}
               />
             )}
-            <LazyThumb src={thumbUrl} alt={img.name} />
-            <div className="gallery-item-name">{img.name}</div>
+            {file.type === 'image' && !file.isDir ? (
+              <LazyThumb
+                src={`/api/files/thumb?path=${encodeURIComponent(file.path)}`}
+                alt={file.name}
+              />
+            ) : (
+              <div className="gallery-thumb-wrap gallery-icon-wrap">
+                <span className="gallery-file-icon">{icon}</span>
+              </div>
+            )}
+            <div className="gallery-item-name">{file.name}</div>
           </div>
         );
       })}

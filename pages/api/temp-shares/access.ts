@@ -11,6 +11,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const token = req.query.token as string;
   if (!token) return res.status(400).json({ error: 'Missing token' });
 
+  // If not an explicit download request, redirect to the share page
+  if (!req.query.dl) {
+    res.redirect(302, `/share?token=${encodeURIComponent(token)}`);
+    return;
+  }
+
   const share = getShare(token);
   if (!share) return res.status(404).json({ error: 'Share not found' });
   if (new Date(share.expires_at) < new Date()) {

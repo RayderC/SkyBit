@@ -63,36 +63,21 @@ export default function Lightbox({ images, initialIndex, folder, onClose, onDele
     <>
       <div
         className="lightbox-overlay"
+        onClick={onClose}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
         {/* Corner close button */}
         <button
           className="lightbox-close-corner"
-          onClick={onClose}
+          onClick={e => { e.stopPropagation(); onClose(); }}
           aria-label="Close"
         >
           ✕
         </button>
 
-        {/* Header */}
-        <div className="lightbox-header">
-          <span className="lightbox-filename">{current.name}</span>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <a
-              href={imgUrl}
-              download={current.name}
-              className="btn btn-secondary btn-sm"
-              onClick={e => e.stopPropagation()}
-            >
-              Download
-            </a>
-            <button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button>
-          </div>
-        </div>
-
         {/* Image area */}
-        <div className="lightbox-body">
+        <div className="lightbox-body" onClick={e => e.stopPropagation()}>
           {images.length > 1 && (
             <button className="lightbox-arrow left" onClick={prev} aria-label="Previous">‹</button>
           )}
@@ -116,8 +101,18 @@ export default function Lightbox({ images, initialIndex, folder, onClose, onDele
           )}
         </div>
 
-        {/* Footer */}
-        <div className="lightbox-footer">
+        {/* Footer — close, filename, download, delete */}
+        <div className="lightbox-footer" onClick={e => e.stopPropagation()}>
+          <button className="btn btn-ghost btn-sm" onClick={onClose} style={{ flexShrink: 0 }}>✕ Close</button>
+          <span className="lightbox-filename" style={{ flex: 1, textAlign: 'left', marginLeft: 12 }}>{current.name}</span>
+          <a
+            href={imgUrl}
+            download={current.name}
+            className="btn btn-secondary btn-sm"
+            onClick={e => e.stopPropagation()}
+          >
+            Download
+          </a>
           <button className="btn btn-danger btn-sm" onClick={() => setShowDelete(true)}>
             Delete
           </button>

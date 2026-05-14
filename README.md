@@ -26,17 +26,20 @@ A self-hosted, web-based personal file explorer with a cyberpunk aesthetic. Uplo
 
 ### Photo Gallery & Lightbox
 - Image-heavy folders automatically switch to a grid gallery view
+- **Gallery shows everything** — folders, images, videos, documents, and all other file types appear as tiles; click a folder to navigate in, click a non-image file to preview it
 - **RAW camera file support** — Sony ARW, Canon CR2/CR3, Nikon NEF, DNG, and more display as previews without any extra software
 - Thumbnails load lazily as you scroll — large galleries stay fast even with hundreds of photos
+- **EXIF auto-rotation** — portrait-mode photos display upright automatically
 - Click any photo to open a full-screen lightbox with:
   - Left/right arrow navigation (keyboard ← → supported)
   - Touch swipe on mobile
-  - Download and delete from within the viewer
-  - Prominent ✕ close button in the top-right corner (Escape key also closes)
+  - Click anywhere outside the image to close
+  - **Close**, Download, and Delete buttons in the bottom bar
+  - Escape key also closes
 
 ### Sharing
 - **Temp share links** — generate time-limited, token-based download links
-- Share page shows the exact filename before the recipient clicks download
+- Share link always opens a preview page first — shows the exact filename before the recipient clicks download (no automatic download on open)
 - Recipients need no account; links expire automatically
 - Admins can view, extend, or revoke all active share links
 

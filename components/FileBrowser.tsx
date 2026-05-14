@@ -411,19 +411,16 @@ export default function FileBrowser({ folder }: Props) {
       )}
 
       {/* Gallery */}
-      {viewMode === 'gallery' && imageFiles.length > 0 && (
+      {viewMode === 'gallery' && filtered.length > 0 && (
         <GalleryView
-          images={imageFiles.map(f => ({ name: f.name, path: f.path }))}
+          files={filtered}
+          imageFiles={imageFiles}
           selected={selected}
           selectionMode={selectionMode}
+          folder={folder}
           onToggleSelect={toggleSelect}
-          onOpen={(i) => setLightboxIndex(i)}
+          onOpenImage={(i) => setLightboxIndex(i)}
         />
-      )}
-      {viewMode === 'gallery' && imageFiles.length === 0 && filtered.length > 0 && (
-        <p style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', textAlign: 'center', padding: 32 }}>
-          No images in this folder. Switch to list view to see all files.
-        </p>
       )}
 
       {/* Selection bar */}
