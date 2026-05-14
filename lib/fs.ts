@@ -20,6 +20,12 @@ export function toRelative(absolutePath: string): string {
 
 export const IMAGE_EXTS = new Set([
   '.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tiff', '.webp', '.svg', '.heic', '.heif', '.avif',
+  // RAW camera formats — served as JPEG previews via dcraw
+  '.arw', '.cr2', '.cr3', '.nef', '.dng', '.raf', '.rw2', '.orf', '.pef', '.srw', '.raw',
+]);
+
+export const RAW_EXTS = new Set([
+  '.arw', '.cr2', '.cr3', '.nef', '.dng', '.raf', '.rw2', '.orf', '.pef', '.srw', '.raw',
 ]);
 export const VIDEO_EXTS = new Set(['.mp4', '.webm', '.mov', '.avi', '.mkv', '.flv', '.wmv']);
 export const AUDIO_EXTS = new Set(['.mp3', '.wav', '.ogg', '.aac', '.flac', '.m4a', '.opus']);
