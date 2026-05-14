@@ -660,6 +660,10 @@ h1, h2, h3, h4 {
 }
 .file-menu-btn:hover { color: var(--text); background: var(--surface-3); }
 
+.file-item.menu-open {
+  position: relative;
+  z-index: 200;
+}
 .file-dropdown {
   position: absolute;
   right: 8px;
@@ -668,7 +672,7 @@ h1, h2, h3, h4 {
   border: 1px solid var(--border-bright);
   border-radius: var(--radius-sm);
   min-width: 160px;
-  z-index: 50;
+  z-index: 1000;
   box-shadow: var(--shadow);
   overflow: hidden;
   animation: fadeInUp 0.12s ease;

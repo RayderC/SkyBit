@@ -350,7 +350,7 @@ export default function FileBrowser({ folder }: Props) {
             <span className="breadcrumb-sep">/</span>
             {i === breadcrumbs.length - 1
               ? <span style={{ color: 'var(--text)' }}>{bc.label}</span>
-              : <Link href={`/${bc.path}`}>{bc.label}</Link>
+              : <Link href={`/${bc.path.split('/').map(s => encodeURIComponent(s)).join('/')}`}>{bc.label}</Link>
             }
           </span>
         ))}
@@ -387,7 +387,7 @@ export default function FileBrowser({ folder }: Props) {
               onOpenImage={(path) => {
                 const idx = imageFiles.findIndex(f => f.path === path);
                 if (idx >= 0) setLightboxIndex(idx);
-                else router.push(`/preview/${path}`);
+                else router.push(`/preview/${path.split('/').map(s => encodeURIComponent(s)).join('/')}`);
               }}
             />
           ))}

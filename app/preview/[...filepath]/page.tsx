@@ -133,11 +133,22 @@ export default function PreviewPage({ params }: Props) {
         )}
 
         {fileData?.fileType === 'pdf' && (
-          <iframe
-            src={downloadUrl}
-            title={filename}
-            style={{ width: '100%', height: '80vh', border: 'none', display: 'block' }}
-          />
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: '16px 0' }}>
+            <embed
+              src={downloadUrl}
+              type="application/pdf"
+              style={{ width: '100%', height: '80vh', border: 'none', display: 'block' }}
+            />
+            <a
+              href={downloadUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-ghost btn-sm"
+              style={{ fontSize: '0.8rem' }}
+            >
+              Open in new tab ↗
+            </a>
+          </div>
         )}
 
         {fileData?.fileType === 'archive' && (

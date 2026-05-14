@@ -27,6 +27,11 @@ interface Props {
   onOpenImage?: (path: string) => void;
 }
 
+// Encode each path segment so special chars like # don't become URL hashes
+function encodePath(p: string): string {
+  return p.split('/').map(s => encodeURIComponent(s)).join('/');
+}
+
 const S = { width: 18, height: 18, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '1.5', strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
 
 function FileIconSvg({ type }: { type: string }) {
@@ -72,11 +77,11 @@ export default function FileItem({
   function handleClick() {
     if (selectionMode) { onToggleSelect(file.path); return; }
     if (file.isDir) {
-      router.push(`/${file.path}`);
+      router.push(`/${encodePath(file.path)}`);
     } else if (file.type === 'image' && onOpenImage) {
       onOpenImage(file.path);
     } else {
-      router.push(`/preview/${file.path}`);
+      router.push(`/preview/${encodePath(file.path)}`);
     }
   }
 
@@ -107,7 +112,7 @@ export default function FileItem({
   return (
     <>
       <li
-        className={`file-item ${selected ? 'selected' : ''}`}
+        className={`file-item ${selected ? 'selected' : ''} ${menuOpen ? 'menu-open' : ''}`}
         onClick={handleClick}
         style={{ cursor: 'pointer' }}
       >
