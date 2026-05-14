@@ -726,6 +726,21 @@ h1, h2, h3, h4 {
   object-fit: cover;
   display: block;
 }
+.gallery-thumb-wrap {
+  width: 100%;
+  aspect-ratio: 1;
+  background: var(--surface-2);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.gallery-thumb-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
 .gallery-item-name {
   padding: 6px 8px;
   font-size: 0.72rem;
@@ -824,6 +839,28 @@ h1, h2, h3, h4 {
   border-radius: 999px;
   border: 1px solid var(--border);
 }
+.lightbox-close-corner {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 300;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(17, 17, 24, 0.85);
+  border: 1px solid var(--border-bright);
+  color: var(--text);
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.lightbox-close-corner:hover {
+  background: var(--surface-2);
+  border-color: var(--primary-light);
+}
 .lightbox-footer {
   display: flex;
   align-items: center;
@@ -858,6 +895,24 @@ h1, h2, h3, h4 {
   color: var(--primary-light);
   font-weight: 600;
   flex: 1;
+}
+
+/* Status bar */
+.browser-statusbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: rgba(17, 17, 24, 0.92);
+  border-top: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  padding: 5px 24px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-align: center;
+  pointer-events: none;
 }
 
 /* Delete modal */

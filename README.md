@@ -22,17 +22,21 @@ A self-hosted, web-based personal file explorer with a cyberpunk aesthetic. Uplo
 
 ### Multi-Select & Bulk Actions
 - Toggle selection mode to check multiple files/folders
-- Bulk delete, move, or copy in a single action via the floating selection bar
+- Bulk **delete**, **move**, **copy**, or **download** in a single action via the floating selection bar
 
 ### Photo Gallery & Lightbox
 - Image-heavy folders automatically switch to a grid gallery view
+- **RAW camera file support** — Sony ARW, Canon CR2/CR3, Nikon NEF, DNG, and more display as previews without any extra software
+- Thumbnails load lazily as you scroll — large galleries stay fast even with hundreds of photos
 - Click any photo to open a full-screen lightbox with:
   - Left/right arrow navigation (keyboard ← → supported)
   - Touch swipe on mobile
   - Download and delete from within the viewer
+  - Prominent ✕ close button in the top-right corner (Escape key also closes)
 
 ### Sharing
 - **Temp share links** — generate time-limited, token-based download links
+- Share page shows the exact filename before the recipient clicks download
 - Recipients need no account; links expire automatically
 - Admins can view, extend, or revoke all active share links
 
@@ -48,6 +52,9 @@ A self-hosted, web-based personal file explorer with a cyberpunk aesthetic. Uplo
 - Hamburger menu on small screens
 - Installable as a PWA: Add to Home Screen on iOS/Android for a native app feel
 - Offline shell caching via service worker
+
+### Interface
+- **File count status bar** — a slim bar pinned to the bottom of the screen shows how many folders and files are in the current directory; updates to show filtered results when searching
 
 ### Design
 - Cyberpunk purple (`#7c0eb3`) + cyan (`#22d3ee`) color palette
@@ -107,7 +114,7 @@ Set `SECRET_KEY` in a `.env` file next to your compose file and reference it wit
 | Container path | Purpose |
 |---|---|
 | `/data` | Your files — mount your file storage directory here |
-| `/app/config` | App data — user accounts and share links are stored in `config/data.json`. **Persist this** or you will lose accounts on container restart. |
+| `/app/config` | App data — user accounts, share links (`data.json`), and the RAW thumbnail cache (`thumbcache/`). **Persist this** or you will lose accounts on container restart. |
 
 The container starts as root, `chown`s both volumes to the `nextjs` user, then drops privileges before starting the server.
 

@@ -66,6 +66,15 @@ export default function Lightbox({ images, initialIndex, folder, onClose, onDele
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
+        {/* Corner close button */}
+        <button
+          className="lightbox-close-corner"
+          onClick={onClose}
+          aria-label="Close"
+        >
+          ✕
+        </button>
+
         {/* Header */}
         <div className="lightbox-header">
           <span className="lightbox-filename">{current.name}</span>

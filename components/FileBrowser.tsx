@@ -125,6 +125,21 @@ export default function FileBrowser({ folder }: Props) {
     setSelected(new Set());
   }
 
+  // Bulk download
+  function handleBulkDownload() {
+    const paths = [...selected];
+    paths.forEach((p, i) => {
+      setTimeout(() => {
+        const a = document.createElement('a');
+        a.href = `/api/files/download?path=${encodeURIComponent(p)}`;
+        a.download = p.split('/').pop() || p;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }, i * 200); // stagger slightly so browsers don't block multiple downloads
+    });
+  }
+
   // Bulk delete
   async function handleBulkDelete() {
     await fetch('/api/files/bulk-delete', {
@@ -418,6 +433,7 @@ export default function FileBrowser({ folder }: Props) {
           onDelete={() => setShowBulkDelete(true)}
           onMove={() => setBulkMove(true)}
           onCopy={() => setBulkCopy(true)}
+          onDownload={handleBulkDownload}
           onCancel={exitSelection}
         />
       )}
@@ -501,6 +517,24 @@ export default function FileBrowser({ folder }: Props) {
               </>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Status bar */}
+      {!loading && (
+        <div className="browser-statusbar">
+          {(() => {
+            const folders = files.filter(f => f.isDir).length;
+            const fileCount = files.filter(f => !f.isDir).length;
+            const parts = [];
+            if (folders > 0) parts.push(`${folders} folder${folders !== 1 ? 's' : ''}`);
+            if (fileCount > 0) parts.push(`${fileCount} file${fileCount !== 1 ? 's' : ''}`);
+            const total = parts.length > 0 ? parts.join(', ') : '0 items';
+            if (search && filtered.length !== files.length) {
+              return <>{filtered.length} of {total} shown</>;
+            }
+            return <>{total}</>;
+          })()}
         </div>
       )}
     </div>

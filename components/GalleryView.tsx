@@ -1,4 +1,5 @@
 'use client';
+import { useEffect, useRef, useState } from 'react';
 
 interface FileEntry {
   name: string;
@@ -13,22 +14,42 @@ interface Props {
   onOpen: (index: number) => void;
 }
 
+function LazyThumb({ src, alt }: { src: string; alt: string }) {
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    // Only request the image when it enters the viewport (+300px margin)
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect(); } },
+      { rootMargin: '300px' }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  return (
+    <div ref={wrapRef} className="gallery-thumb-wrap">
+      {visible && <img src={src} alt={alt} />}
+    </div>
+  );
+}
+
 export default function GalleryView({ images, selected, selectionMode, onToggleSelect, onOpen }: Props) {
   return (
     <div className="gallery-grid">
       {images.map((img, i) => {
-        const imgUrl = `/api/files/download?path=${encodeURIComponent(img.path)}`;
+        const thumbUrl = `/api/files/thumb?path=${encodeURIComponent(img.path)}`;
         const isSelected = selected.has(img.path);
         return (
           <div
             key={img.path}
             className={`gallery-item ${isSelected ? 'selected' : ''}`}
             onClick={() => {
-              if (selectionMode) {
-                onToggleSelect(img.path);
-              } else {
-                onOpen(i);
-              }
+              if (selectionMode) onToggleSelect(img.path);
+              else onOpen(i);
             }}
           >
             {selectionMode && (
@@ -40,11 +61,7 @@ export default function GalleryView({ images, selected, selectionMode, onToggleS
                 onClick={e => e.stopPropagation()}
               />
             )}
-            <img
-              src={imgUrl}
-              alt={img.name}
-              loading="lazy"
-            />
+            <LazyThumb src={thumbUrl} alt={img.name} />
             <div className="gallery-item-name">{img.name}</div>
           </div>
         );
