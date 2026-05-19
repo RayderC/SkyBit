@@ -26,7 +26,7 @@ interface Props {
 
 export default function FileBrowser({ folder }: Props) {
   const router = useRouter();
-  const { addFiles } = useUpload();
+  const { addFiles, addOperation } = useUpload();
 
   const [files, setFiles] = useState<FileEntry[]>([]);
   const [role, setRole] = useState('user');
@@ -152,31 +152,42 @@ export default function FileBrowser({ folder }: Props) {
     loadFiles();
   }
 
-  // Single move/copy
+  // Move — fires the job in the background; progress shown in the upload queue panel
   async function handleMove(dest: string) {
     const paths = moveTarget ? [moveTarget] : [...selected];
-    await fetch('/api/files/bulk-move', {
+    const label = paths.length === 1
+      ? (paths[0].split('/').pop() || paths[0])
+      : `${paths.length} items`;
+    const res = await fetch('/api/files/move-job', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ paths, dest }),
+      body: JSON.stringify({ paths, dest, label }),
     });
+    const { jobId } = await res.json();
     setMoveTarget(null);
     setBulkMove(false);
     exitSelection();
-    loadFiles();
+    // Refresh the listing once the move finishes
+    addOperation(jobId, label, 'move', loadFiles);
   }
 
+  // Copy — fires the job in the background; progress shown in the upload queue panel
   async function handleCopy(dest: string) {
     const paths = copyTarget ? [copyTarget] : [...selected];
-    await fetch('/api/files/bulk-copy', {
+    const label = paths.length === 1
+      ? (paths[0].split('/').pop() || paths[0])
+      : `${paths.length} items`;
+    const res = await fetch('/api/files/copy-job', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ paths, dest }),
+      body: JSON.stringify({ paths, dest, label }),
     });
+    const { jobId } = await res.json();
     setCopyTarget(null);
     setBulkCopy(false);
     exitSelection();
-    loadFiles();
+    // Refresh the listing once the copy finishes
+    addOperation(jobId, label, 'copy', loadFiles);
   }
 
   // Share
