@@ -6,11 +6,27 @@ export interface SessionData {
   role?: 'admin' | 'mod' | 'user';
 }
 
+const isBuild = process.env.NEXT_PHASE === 'phase-production-build';
+
+const sessionPassword =
+  process.env.SECRET_KEY ||
+  (isBuild || process.env.NODE_ENV !== 'production'
+    ? 'build_time_placeholder_secret_at_least_32_chars'
+    : '');
+
+if (!sessionPassword || sessionPassword.length < 32) {
+  throw new Error(
+    'SECRET_KEY environment variable must be set to a string of at least 32 characters'
+  );
+}
+
 export const sessionOptions: SessionOptions = {
-  password: process.env.SECRET_KEY || 'skybit-default-secret-key-change-this-now!!',
+  password: sessionPassword,
   cookieName: 'skybit-session',
   cookieOptions: {
     secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    sameSite: 'lax',
     maxAge: 60 * 60 * 24 * 30,
   },
 };

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { UploadProvider } from '@/components/UploadManager';
 import Navigation from '@/components/Navigation';
+import CircuitBackground from '@/components/CircuitBackground';
 
 export const metadata: Metadata = {
   title: 'SkyBit',
@@ -45,6 +46,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
+        <CircuitBackground />
         <UploadProvider>
           <Navigation />
           <main>{children}</main>

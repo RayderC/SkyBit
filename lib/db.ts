@@ -97,19 +97,6 @@ function init() {
     } catch { /* silent */ }
   }
 
-  // Create default admin if no users exist
-  if (data.users.length === 0) {
-    data.users.push({
-      id: data.nextUserId++,
-      username: 'admin',
-      password: bcrypt.hashSync('admin', 12),
-      role: 'admin',
-      created_at: new Date().toISOString(),
-    });
-    changed = true;
-    console.log('[SkyBit] Created default admin (username: admin, password: admin) — change this immediately!');
-  }
-
   if (changed) write(data);
 }
 

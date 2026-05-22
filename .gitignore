@@ -4,6 +4,7 @@ node_modules/
 # Next.js build output
 .next/
 out/
+tsconfig.tsbuildinfo
 
 # Runtime data (user files + database — mount as volumes)
 data/

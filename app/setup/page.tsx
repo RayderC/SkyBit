@@ -29,16 +29,20 @@ const NODES: [number, number, string][] = [
   [860,715,'purple'],[915,715,'cyan'],[915,655,'purple'],
 ];
 
-export default function LoginPage() {
+export default function SetupPage() {
   const router = useRouter();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
     fetch('/api/auth/setup')
       .then((r) => r.json())
-      .then((data) => { if (data?.needsSetup) router.replace('/setup'); })
-      .catch(() => {});
+      .then((data) => {
+        if (!data?.needsSetup) router.replace('/login');
+        else setChecking(false);
+      })
+      .catch(() => setChecking(false));
   }, [router]);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -46,16 +50,32 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     const fd = new FormData(e.currentTarget);
-    const res = await fetch('/api/auth/login', {
+    const password = fd.get('password') as string;
+    const confirm = fd.get('confirm') as string;
+    if (password !== confirm) {
+      setError('Passwords do not match');
+      setLoading(false);
+      return;
+    }
+    const res = await fetch('/api/auth/setup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: fd.get('username'), password: fd.get('password') }),
+      body: JSON.stringify({ username: fd.get('username'), password }),
     });
     const data = await res.json();
     setLoading(false);
-    if (!res.ok) { setError(data.error || 'Login failed'); return; }
+    if (!res.ok) { setError(data.error || 'Setup failed'); return; }
     router.push('/');
-    router.refresh();
+  }
+
+  if (checking) {
+    return (
+      <div className="auth-page">
+        <div className="auth-card">
+          <p style={{ color: 'var(--text-muted)', textAlign: 'center' }}>Checking setup status…</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -75,8 +95,8 @@ export default function LoginPage() {
 
       <div className="auth-card">
         <Link href="/" className="auth-logo">SkyBit</Link>
-        <h1 className="auth-title">Welcome back</h1>
-        <p className="auth-subtitle">Sign in to access your files</p>
+        <h1 className="auth-title">First-time setup</h1>
+        <p className="auth-subtitle">Create the administrator account for this instance.</p>
 
         {error && <p className="form-error">{error}</p>}
 
@@ -87,7 +107,7 @@ export default function LoginPage() {
               name="username"
               type="text"
               className="form-input"
-              placeholder="Enter username"
+              placeholder="admin"
               autoComplete="username"
               required
             />
@@ -98,13 +118,26 @@ export default function LoginPage() {
               name="password"
               type="password"
               className="form-input"
-              placeholder="Enter password"
-              autoComplete="current-password"
+              placeholder="At least 8 characters"
+              autoComplete="new-password"
+              minLength={8}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Confirm password</label>
+            <input
+              name="confirm"
+              type="password"
+              className="form-input"
+              placeholder="Repeat password"
+              autoComplete="new-password"
+              minLength={8}
               required
             />
           </div>
           <button type="submit" className="btn btn-primary" disabled={loading} style={{ marginTop: 8 }}>
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? 'Creating admin...' : 'Create Admin Account'}
           </button>
         </form>
       </div>
