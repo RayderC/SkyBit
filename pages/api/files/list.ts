@@ -21,14 +21,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ error: 'Folder not found' });
     }
 
-    const entries = fs.readdirSync(dirPath, { withFileTypes: true });
-    const files = entries
-      .map((e) => {
+    const entries = await fs.promises.readdir(dirPath, { withFileTypes: true });
+    const files = (await Promise.all(
+      entries.map(async (e) => {
         const fullPath = path.join(dirPath, e.name);
         let size: number | null = null;
         let modified = '';
         try {
-          const stat = fs.statSync(fullPath);
+          const stat = await fs.promises.stat(fullPath);
           size = e.isDirectory() ? null : stat.size;
           modified = stat.mtime.toISOString();
         } catch { /* ignore */ }
@@ -41,6 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           modified,
         };
       })
+    ))
       .sort((a, b) => {
         if (a.isDir !== b.isDir) return a.isDir ? -1 : 1;
         return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });

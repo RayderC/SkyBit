@@ -860,6 +860,21 @@ h1, h2, h3, h4 {
   border-radius: 999px;
   border: 1px solid var(--border);
 }
+/* Lightbox loading skeleton */
+.lightbox-skeleton {
+  position: absolute;
+  inset: 16px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--surface-2) 0%,
+    var(--surface-3) 40%,
+    var(--surface-2) 80%
+  );
+  background-size: 200% 100%;
+  animation: pulse-bar 1.4s ease-in-out infinite;
+}
+
 .lightbox-close-corner {
   position: absolute;
   top: 16px;

@@ -13,6 +13,7 @@ interface Props {
 export default function Lightbox({ images, initialIndex, folder, onClose, onDeleted }: Props) {
   const [index, setIndex] = useState(initialIndex);
   const [showDelete, setShowDelete] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const touchStartX = useRef<number | null>(null);
 
   const current = images[index];
@@ -21,6 +22,10 @@ export default function Lightbox({ images, initialIndex, folder, onClose, onDele
   const prev = useCallback(() => setIndex(i => (i > 0 ? i - 1 : images.length - 1)), [images.length]);
   const next = useCallback(() => setIndex(i => (i < images.length - 1 ? i + 1 : 0)), [images.length]);
 
+  // Reset loading state when the image changes
+  useEffect(() => { setImageLoaded(false); }, [index]);
+
+  // Keyboard navigation
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') onClose();
@@ -34,6 +39,15 @@ export default function Lightbox({ images, initialIndex, folder, onClose, onDele
       document.body.style.overflow = '';
     };
   }, [onClose, prev, next]);
+
+  // Preload the next and previous images so navigation feels instant
+  useEffect(() => {
+    const toPreload = [index - 1, index + 1].filter(i => i >= 0 && i < images.length);
+    toPreload.forEach(i => {
+      const img = new window.Image();
+      img.src = `/api/files/download?path=${encodeURIComponent(images[i].path)}`;
+    });
+  }, [index, images]);
 
   async function handleDelete() {
     const path = current.path;
@@ -82,12 +96,19 @@ export default function Lightbox({ images, initialIndex, folder, onClose, onDele
             <button className="lightbox-arrow left" onClick={prev} aria-label="Previous">‹</button>
           )}
 
+          {/* Loading skeleton — visible until the image fires onLoad */}
+          {!imageLoaded && (
+            <div className="lightbox-skeleton" aria-hidden="true" />
+          )}
+
           <img
             key={current.path}
             src={imgUrl}
             alt={current.name}
             className="lightbox-img"
             draggable={false}
+            onLoad={() => setImageLoaded(true)}
+            style={{ opacity: imageLoaded ? 1 : 0, transition: 'opacity 0.2s ease' }}
           />
 
           {images.length > 1 && (
