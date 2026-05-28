@@ -30,9 +30,8 @@ const TYPE_ICONS: Record<string, string> = {
   other: '📎',
 };
 
-// Fixed item dimensions — must match CSS
-const ITEM_WIDTH = 172;  // 160px tile + 12px gap
-const ITEM_HEIGHT = 204; // 160px square + 32px name label + 12px gap
+// Min tile width + gap — drives column count calculation
+const TILE_MIN = 172; // 160px + 12px gap
 
 export default function GalleryView({
   files, imageFiles, selected, selectionMode, folder, onToggleSelect, onOpenImage,
@@ -41,21 +40,18 @@ export default function GalleryView({
   const gridRef = useRef<HTMLDivElement>(null);
   const [cols, setCols] = useState(4);
 
-  // Track container width to calculate column count
+  // Track container width → column count
   useEffect(() => {
     const el = gridRef.current;
     if (!el) return;
-    const calc = () => {
-      const w = el.getBoundingClientRect().width;
-      setCols(Math.max(1, Math.floor((w + 12) / ITEM_WIDTH)));
-    };
+    const calc = () => setCols(Math.max(1, Math.floor((el.getBoundingClientRect().width + 12) / TILE_MIN)));
     calc();
     const ro = new ResizeObserver(calc);
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
 
-  // Group flat file list into rows for the virtualizer
+  // Group flat list into rows
   const rows = useMemo(() => {
     const result: FileEntry[][] = [];
     for (let i = 0; i < files.length; i += cols) {
@@ -66,9 +62,9 @@ export default function GalleryView({
 
   const virtualizer = useWindowVirtualizer({
     count: rows.length,
-    estimateSize: () => ITEM_HEIGHT,
+    // Conservative over-estimate — measureElement corrects it after first render
+    estimateSize: () => 240,
     overscan: 3,
-    // offset from top of page to the grid container
     scrollMargin: gridRef.current?.offsetTop ?? 0,
   });
 
@@ -88,11 +84,14 @@ export default function GalleryView({
 
   return (
     <div ref={gridRef}>
-      {/* Outer div sized to the full virtual height so the scrollbar is accurate */}
       <div style={{ height: virtualizer.getTotalSize(), position: 'relative' }}>
         {virtualizer.getVirtualItems().map(vRow => (
           <div
             key={vRow.key}
+            // measureElement reads the actual rendered height of each row so
+            // the virtualizer self-corrects after the first paint — no more overlap
+            ref={virtualizer.measureElement}
+            data-index={vRow.index}
             style={{
               position: 'absolute',
               top: 0,
@@ -127,7 +126,6 @@ export default function GalleryView({
 
                   {file.type === 'image' && !file.isDir ? (
                     <div className="gallery-thumb-wrap">
-                      {/* loading="lazy" lets the browser natively throttle image fetches */}
                       <img
                         src={`/api/files/thumb?path=${encodeURIComponent(file.path)}`}
                         alt={file.name}

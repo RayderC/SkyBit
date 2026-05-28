@@ -44,7 +44,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     ))
       .sort((a, b) => {
         if (a.isDir !== b.isDir) return a.isDir ? -1 : 1;
-        return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+        // numeric: true gives Windows Explorer-style natural sort
+        // so "img2.jpg" sorts before "img10.jpg" instead of after
+        return a.name.localeCompare(b.name, undefined, { sensitivity: 'base', numeric: true });
       });
 
     const isImageFolder = detectImageFolder(files.map((f) => ({ name: f.name, isDir: f.isDir })));
