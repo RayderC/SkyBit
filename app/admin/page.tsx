@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import DeleteModal from '@/components/DeleteModal';
 
 interface User { id: number; username: string; role: string; created_at: string; }
@@ -75,8 +76,8 @@ export default function AdminPage() {
       <div className="page-header">
         <h1 className="page-title">User Management</h1>
         <div style={{ display: 'flex', gap: 8 }}>
-          <a href="/" className="btn btn-ghost btn-sm">← Files</a>
-          <a href="/admin/temp-shares" className="btn btn-secondary btn-sm">Temp Shares</a>
+          <Link href="/" className="btn btn-ghost btn-sm">← Files</Link>
+          <Link href="/admin/temp-shares" className="btn btn-secondary btn-sm">Temp Shares</Link>
           <button className="btn btn-primary btn-sm" onClick={() => setShowAdd(!showAdd)}>
             + Add User
           </button>

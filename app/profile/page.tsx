@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -54,7 +55,7 @@ export default function ProfilePage() {
         <p className="auth-subtitle">
           <span style={{
             color: user.role === 'admin' ? 'var(--primary-light)' : user.role === 'mod' ? 'var(--accent-cyan)' : 'var(--text-muted)',
-          }}>// {user.role}</span>
+          }}>{'// '}{user.role}</span>
         </p>
 
         {error && <div className="flash flash-error">{error}</div>}
@@ -83,10 +84,10 @@ export default function ProfilePage() {
 
         <div style={{ borderTop: '1px solid var(--border)', marginTop: 20, paddingTop: 16, display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
           {user.role === 'admin' && (
-            <a href="/admin" className="btn btn-secondary btn-sm">User Management</a>
+            <Link href="/admin" className="btn btn-secondary btn-sm">User Management</Link>
           )}
           {user.role === 'admin' && (
-            <a href="/admin/temp-shares" className="btn btn-secondary btn-sm">Temp Shares</a>
+            <Link href="/admin/temp-shares" className="btn btn-secondary btn-sm">Temp Shares</Link>
           )}
           <button className="btn btn-danger btn-sm" onClick={handleLogout}>Sign Out</button>
         </div>
