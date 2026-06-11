@@ -25,7 +25,7 @@ function ShareContent() {
     <div className="auth-page">
       <div className="auth-card">
         <div className="auth-logo" style={{ fontSize: '1.4rem' }}>SkyBit</div>
-        <p className="auth-subtitle">// shared file</p>
+        <p className="auth-subtitle">{'// shared file'}</p>
 
         {error ? (
           <p style={{ color: 'var(--danger)', fontSize: '0.88rem', textAlign: 'center', marginBottom: 24 }}>

@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 interface Share { token: string; filepath: string; expires_at: string; created_at: string; }
 
@@ -50,7 +51,7 @@ export default function TempSharesPage() {
     <div className="page-root">
       <div className="page-header">
         <h1 className="page-title">Temp Share Links</h1>
-        <a href="/admin" className="btn btn-secondary btn-sm">← Users</a>
+        <Link href="/admin" className="btn btn-secondary btn-sm">← Users</Link>
       </div>
 
       {shares.length === 0 ? (

@@ -1,0 +1,15 @@
+services:
+  skybit:
+    image: rayderc/skybit:latest
+    container_name: skybit
+    restart: always
+    ports:
+      - 7070:7070
+    environment:
+      # Generate a strong secret: openssl rand -hex 32
+      - SESSION_SECRET=${SESSION_SECRET:-change_me_to_a_random_64_char_string}
+      - BASE_DIRECTORY=/data
+      - SITE_NAME=SkyBit
+    volumes:
+      - ./data:/data
+      - ./config:/app/config
