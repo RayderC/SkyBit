@@ -6,22 +6,21 @@
     "dev": "next dev -p 7070",
     "build": "next build",
     "start": "next start -p 7070",
-    "lint": "next lint"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@tanstack/react-virtual": "^3.13.26",
-    "archiver": "^7.0.1",
+    "archiver": "^8.0.0",
     "bcryptjs": "^3.0.2",
     "busboy": "^1.6.0",
     "iron-session": "^8.0.4",
-    "next": "15.3.3",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
-    "sharp": "^0.34.5",
+    "next": "^16.4.5",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "sharp": "^0.35.5",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
-    "@types/archiver": "^6.0.3",
     "@types/bcryptjs": "^2.4.6",
     "@types/busboy": "^1.5.4",
     "@types/node": "^22.15.18",

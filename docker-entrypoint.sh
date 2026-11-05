@@ -14,5 +14,6 @@ if [ -z "${SECRET_KEY:-}" ]; then
 fi
 
 # Fix permissions on mounted volumes, then drop to nextjs user
-chown -R nextjs:nodejs /app/config /data 2>/dev/null || true
+# Only touches what isn't already owned, so a large library doesn't slow every restart.
+find /app/config /data ! -user nextjs -exec chown nextjs:nodejs {} + 2>/dev/null || true
 exec su-exec nextjs node /app/server.js

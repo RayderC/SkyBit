@@ -5,14 +5,14 @@ import { Suspense, useEffect, useState } from 'react';
 function ShareContent() {
   const params = useSearchParams();
   const token = params?.get('token') || '';
-  const downloadUrl = `/api/temp-shares/access?token=${token}&dl=1`;
+  const downloadUrl = `/api/temp-shares/access?token=${encodeURIComponent(token)}&dl=1`;
 
   const [filename, setFilename] = useState<string | null>(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (!token) return;
-    fetch(`/api/temp-shares/info?token=${token}`)
+    fetch(`/api/temp-shares/info?token=${encodeURIComponent(token)}`)
       .then(r => r.json())
       .then(data => {
         if (data.error) setError(data.error);

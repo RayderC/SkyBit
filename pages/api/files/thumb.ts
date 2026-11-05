@@ -1,6 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getIronSession } from 'iron-session';
-import { sessionOptions, SessionData } from '@/lib/session';
+import { getSession } from '@/lib/session';
 import { resolveSafePath, RAW_EXTS } from '@/lib/fs';
 import fs from 'fs';
 import path from 'path';
@@ -49,11 +48,8 @@ async function ensureThumbCache() {
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const token = req.query.token as string | undefined;
-  if (!token) {
-    const session = await getIronSession<SessionData>(req, res, sessionOptions);
-    if (!session.userId) return res.status(401).json({ error: 'Unauthorized' });
-  }
+  const session = await getSession(req, res);
+  if (!session.userId) return res.status(401).json({ error: 'Unauthorized' });
 
   const filePath = (req.query.path as string) || '';
 
@@ -72,7 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const cached = await fs.promises.readFile(cachePath);
       res.setHeader('Content-Type', 'image/jpeg');
       res.setHeader('Content-Length', cached.length);
-      res.setHeader('Cache-Control', 'public, max-age=86400');
+      res.setHeader('Cache-Control', 'private, max-age=86400');
       return res.end(cached);
     }
 
@@ -92,7 +88,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         try { await fs.promises.writeFile(cachePath, thumb); } catch { /* non-fatal */ }
         res.setHeader('Content-Type', 'image/jpeg');
         res.setHeader('Content-Length', thumb.length);
-        res.setHeader('Cache-Control', 'public, max-age=86400');
+        res.setHeader('Cache-Control', 'private, max-age=86400');
         return res.end(thumb);
       }
 
@@ -109,7 +105,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try { await fs.promises.writeFile(cachePath, thumb); } catch { /* non-fatal */ }
     res.setHeader('Content-Type', 'image/jpeg');
     res.setHeader('Content-Length', thumb.length);
-    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.setHeader('Cache-Control', 'private, max-age=86400');
     return res.end(thumb);
 
   } catch (e: unknown) {

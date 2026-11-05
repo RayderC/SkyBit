@@ -139,7 +139,7 @@ h1, h2, h3, h4 {
   position: sticky;
   top: 0;
   z-index: 100;
-  height: var(--nav-h);
+  height: calc(var(--nav-h) + env(safe-area-inset-top));
   background: rgba(10, 10, 18, 0.85);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -211,50 +211,13 @@ h1, h2, h3, h4 {
 }
 
 /* ─── Mobile nav ────────────────────────────────────────────────────── */
-.nav-hamburger {
-  display: none;
-  background: none;
-  border: none;
-  color: var(--text);
-  font-size: 1.1rem;
-  cursor: pointer;
-  padding: 6px 8px;
-  border-radius: var(--radius-sm);
-  transition: background 0.15s;
-  flex-shrink: 0;
-}
-.nav-hamburger:hover { background: var(--surface-2); }
-
-.nav-mobile-menu {
-  display: none;
-  flex-direction: column;
-  background: var(--surface);
-  border-top: 1px solid var(--border);
-  padding: 8px 0;
-}
-.nav-mobile-link {
-  display: block;
-  padding: 12px 20px;
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  font-family: var(--font-mono);
-  text-decoration: none;
-  background: none;
-  border: none;
-  text-align: left;
-  cursor: pointer;
-  width: 100%;
-  transition: background 0.15s, color 0.15s;
-}
-.nav-mobile-link:hover, .nav-mobile-link.active { background: var(--surface-2); color: var(--primary-light); }
-.nav-mobile-signout { color: var(--text-subtle); border-top: 1px solid var(--border); margin-top: 4px; }
+.nav-signout-mobile { display: none; font-size: 0.78rem; padding: 5px 10px; margin-left: auto; }
 
 @media (max-width: 640px) {
   .nav-links-desktop { display: none; }
   .nav-user-desktop  { display: none; }
   .nav-spacer        { display: none; }
-  .nav-hamburger     { display: block; }
-  .nav-mobile-menu   { display: flex; }
+  .nav-signout-mobile { display: inline-flex; }
 }
 
 /* ─── Buttons ────────────────────────────────────────────────────────── */
@@ -1160,4 +1123,39 @@ h1, h2, h3, h4 {
   .selection-bar::-webkit-scrollbar { display: none; }
   .selection-bar .btn { flex-shrink: 0; font-size: 0.8rem; padding: 7px 12px; }
   .selection-count { flex-shrink: 0; }
+}
+
+/* ===================== PHONE LAYOUT: BOTTOM TAB BAR ===================== */
+
+.tabbar { display: none; }
+
+@media (max-width: 640px) {
+  /* Keeps the end of every page clear of the bar. */
+  body:has(.tabbar) { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
+  .tabbar {
+    display: grid; position: fixed; left: 0; right: 0; bottom: 0; z-index: 120;
+    background: rgba(17, 17, 24, 0.94); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border-top: 1px solid var(--border-bright);
+    padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+  }
+  .tabbar-item {
+    display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 0; min-width: 0;
+    background: none; border: none; cursor: pointer; text-decoration: none;
+    color: var(--text-muted); font-size: 10px; font-weight: 600; font-family: var(--font-mono);
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .tabbar-item span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tabbar-item.active { color: var(--primary-light); text-shadow: 0 0 10px rgba(168, 85, 247, 0.5); }
+}
+
+/* Phones draw the app under the status bar when it's installed to the home screen. */
+.nav { padding-top: env(safe-area-inset-top); }
+
+@media print { .tabbar { display: none !important; } }
+
+@media (max-width: 640px) {
+  /* Selecting files and watching uploads shouldn't hide the bar, or be hidden by it. */
+  .selection-bar { bottom: calc(60px + env(safe-area-inset-bottom)); }
+  .upload-manager { bottom: calc(72px + env(safe-area-inset-bottom)); }
+  .browser-root { padding-bottom: 80px; }
 }

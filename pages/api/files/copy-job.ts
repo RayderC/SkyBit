@@ -1,14 +1,15 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getIronSession } from 'iron-session';
-import { sessionOptions, SessionData } from '@/lib/session';
-import { resolveSafePath, getUniquePath, copyRecursive } from '@/lib/fs';
+import { checkCsrf } from '@/lib/csrf';
+import { getSession } from '@/lib/session';
+import { resolveSafePath, resolveEntryPath, getUniquePath, copyRecursive } from '@/lib/fs';
 import { createJob, updateJob } from '@/lib/jobs';
 import path from 'path';
 import fs from 'fs';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).end();
-  const session = await getIronSession<SessionData>(req, res, sessionOptions);
+  if (!checkCsrf(req)) return res.status(403).json({ error: 'Forbidden' });
+  const session = await getSession(req, res);
   if (!session.userId || !['admin', 'mod'].includes(session.role!)) {
     return res.status(403).json({ error: 'Forbidden' });
   }
@@ -27,9 +28,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const destDir = resolveSafePath(dest);
       if (!fs.existsSync(destDir)) fs.mkdirSync(destDir, { recursive: true });
       for (const p of paths) {
-        const srcPath = resolveSafePath(p);
+        const srcPath = resolveEntryPath(p);
         const destPath = getUniquePath(path.join(destDir, path.basename(srcPath)));
-        copyRecursive(srcPath, destPath);
+        await copyRecursive(srcPath, destPath);
       }
       updateJob(job.id, { status: 'done' });
     } catch (e) {

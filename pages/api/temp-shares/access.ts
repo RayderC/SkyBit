@@ -1,9 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getShare } from '@/lib/db';
-import { resolveSafePath } from '@/lib/fs';
+import { resolveSafePath, contentDisposition } from '@/lib/fs';
 import fs from 'fs';
 import path from 'path';
-import archiver from 'archiver';
+import { pipeline } from 'stream/promises';
+import { ZipArchive } from 'archiver';
 
 export const config = { api: { responseLimit: false } };
 
@@ -30,23 +31,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const stat = fs.statSync(resolved);
     if (stat.isDirectory()) {
       res.setHeader('Content-Type', 'application/zip');
-      res.setHeader(
-        'Content-Disposition',
-        `attachment; filename="${encodeURIComponent(path.basename(resolved))}.zip"`
-      );
-      const archive = archiver('zip', { zlib: { level: 6 } });
+      res.setHeader('Content-Disposition', contentDisposition('attachment', `${path.basename(resolved)}.zip`));
+      const archive = new ZipArchive({ zlib: { level: 6 } });
+      archive.on('error', (e) => { console.error('[share]', e); res.destroy(); });
+      res.on('close', () => { if (!res.writableFinished) archive.abort(); });
       archive.pipe(res);
       archive.directory(resolved, path.basename(resolved));
       await archive.finalize();
     } else {
-      res.setHeader(
-        'Content-Disposition',
-        `attachment; filename="${encodeURIComponent(path.basename(resolved))}"`
-      );
+      res.setHeader('Content-Type', 'application/octet-stream');
+      res.setHeader('Content-Disposition', contentDisposition('attachment', path.basename(resolved)));
       res.setHeader('Content-Length', stat.size);
-      fs.createReadStream(resolved).pipe(res);
+      res.setHeader('Cache-Control', 'no-store');
+      await pipeline(fs.createReadStream(resolved), res).catch(() => res.destroy());
     }
   } catch (e: unknown) {
+    if (res.headersSent) return void res.destroy();
     res.status(400).json({ error: e instanceof Error ? e.message : 'Error' });
   }
 }

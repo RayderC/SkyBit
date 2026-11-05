@@ -1,14 +1,13 @@
 export const config = { api: { responseLimit: false } };
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getIronSession } from 'iron-session';
-import { sessionOptions, SessionData } from '@/lib/session';
+import { getSession } from '@/lib/session';
 import { resolveSafePath, getFileType, detectImageFolder, formatSize, ensureBaseDir } from '@/lib/fs';
 import fs from 'fs';
 import path from 'path';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const session = await getIronSession<SessionData>(req, res, sessionOptions);
+  const session = await getSession(req, res);
   if (!session.userId) return res.status(401).json({ error: 'Unauthorized' });
 
   ensureBaseDir();

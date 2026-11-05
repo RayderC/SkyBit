@@ -11,6 +11,7 @@ export interface User {
   username: string;
   password: string;
   role: 'admin' | 'mod' | 'user';
+  tokenVersion?: number;
   created_at: string;
 }
 
@@ -48,17 +49,19 @@ function read(): DbData {
   try {
     if (!fs.existsSync(dbFile)) return fresh();
     return JSON.parse(fs.readFileSync(dbFile, 'utf8'));
-  } catch {
-    try {
-      fs.renameSync(dbFile, `${dbFile}.bak.${Date.now()}`);
-      console.log('[SkyBit] Corrupted data.json backed up — starting fresh');
-    } catch { /* ignore rename failure */ }
-    return fresh();
+  } catch (e) {
+    // Never start fresh here: with no users the app would offer first-time setup, and whoever
+    // reached it first would become admin of every file on the server.
+    console.error(`[SkyBit] Can't read ${dbFile}. Restore it from a backup to continue.`, e);
+    throw new Error('The user database could not be read');
   }
 }
 
 function write(data: DbData): void {
-  fs.writeFileSync(dbFile, JSON.stringify(data, null, 2), 'utf8');
+  // Write then rename, so a crash mid-write can't leave a truncated file behind.
+  const tmp = `${dbFile}.${process.pid}.tmp`;
+  fs.writeFileSync(tmp, JSON.stringify(data, null, 2), { encoding: 'utf8', mode: 0o600 });
+  fs.renameSync(tmp, dbFile);
 }
 
 // ── Initialise ───────────────────────────────────────────────────────────────
@@ -142,9 +145,16 @@ export function updateUser(
     }
     data.users[idx].username = updates.username.trim();
   }
-  if (updates.password) data.users[idx].password = updates.password;
+  if (updates.password) {
+    data.users[idx].password = updates.password;
+    data.users[idx].tokenVersion = (data.users[idx].tokenVersion ?? 0) + 1;
+  }
   if (updates.role) data.users[idx].role = updates.role;
   write(data);
+}
+
+export function otherAdminExists(id: number): boolean {
+  return read().users.some(u => u.role === 'admin' && u.id !== id);
 }
 
 export function deleteUser(id: number): void {

@@ -31,17 +31,22 @@ export default function PreviewPage({ params }: Props) {
     ]).then(([preview, user]) => {
       setFileData(preview);
       setRole(user.role || 'user');
-      if (preview.content) setContent(preview.content);
+      if (typeof preview.content === 'string') setContent(preview.content);
       setLoading(false);
     }).catch(() => setLoading(false));
   }, [filePath]);
 
   async function handleSave() {
-    await fetch('/api/files/save', {
+    const res = await fetch('/api/files/save', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ path: filePath, content }),
     });
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      alert(data?.error || 'Save failed. Your changes are still in the editor.');
+      return;
+    }
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }

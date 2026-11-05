@@ -2,12 +2,12 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import TabBar from '@/components/TabBar';
 
 export default function Navigation() {
   const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState<{ username: string; role: string } | null>(null);
-  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     fetch('/api/auth/user').then(r => {
@@ -15,9 +15,6 @@ export default function Navigation() {
       return r.json();
     }).then(u => setUser(u));
   }, [pathname]);
-
-  // Close mobile menu on navigation
-  useEffect(() => { setMenuOpen(false); }, [pathname]);
 
   async function handleLogout() {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -30,6 +27,7 @@ export default function Navigation() {
   const isFiles = pathname && pathname !== '/admin' && !pathname.startsWith('/admin/') && !pathname.startsWith('/profile') && !pathname.startsWith('/login') && !pathname.startsWith('/share');
 
   return (
+    <>
     <nav className="nav">
       <div className="nav-inner">
         <Link href="/" className="nav-logo">SkyBit</Link>
@@ -53,27 +51,16 @@ export default function Navigation() {
           </button>
         </div>
 
-        {/* Mobile hamburger */}
-        <button
-          className="nav-hamburger"
-          onClick={() => setMenuOpen(o => !o)}
-          aria-label="Menu"
-        >
-          {menuOpen ? '✕' : '☰'}
-        </button>
+        {/* Phones have the bottom bar for everything else */}
+        <button className="btn btn-ghost btn-sm nav-signout-mobile" onClick={handleLogout}>Sign Out</button>
       </div>
-
-      {/* Mobile dropdown */}
-      {menuOpen && (
-        <div className="nav-mobile-menu">
-          <Link href="/" className={`nav-mobile-link ${isFiles ? 'active' : ''}`}>Files</Link>
-          {user.role === 'admin' && (
-            <Link href="/admin" className={`nav-mobile-link ${pathname?.startsWith('/admin') ? 'active' : ''}`}>Admin</Link>
-          )}
-          <Link href="/profile" className="nav-mobile-link">{user.username} ({user.role})</Link>
-          <button className="nav-mobile-link nav-mobile-signout" onClick={handleLogout}>Sign Out</button>
-        </div>
-      )}
     </nav>
+
+    <TabBar tabs={[
+      { label: 'Files', icon: 'folder', href: '/', active: !!isFiles },
+      ...(user.role === 'admin' ? [{ label: 'Admin', icon: 'shield', href: '/admin', active: !!pathname?.startsWith('/admin') }] : []),
+      { label: 'Profile', icon: 'user', href: '/profile', active: !!pathname?.startsWith('/profile') },
+    ]} />
+    </>
   );
 }

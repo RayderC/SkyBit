@@ -5,13 +5,50 @@ export const BASE_DIR = process.env.BASE_DIRECTORY
   ? path.resolve(process.env.BASE_DIRECTORY)
   : path.resolve(process.cwd(), 'data');
 
+const isInside = (base: string, p: string) => p === base || p.startsWith(base + path.sep);
+
 export function resolveSafePath(userPath: string): string {
+  if (userPath != null && typeof userPath !== 'string') throw new Error('Invalid path');
+  if ((userPath || '').includes('\0')) throw new Error('Invalid path');
   const cleaned = (userPath || '').replace(/\\/g, '/').replace(/^\/+/, '');
   const resolved = path.resolve(BASE_DIR, cleaned);
-  if (!resolved.startsWith(BASE_DIR + path.sep) && resolved !== BASE_DIR) {
+  if (!isInside(BASE_DIR, resolved)) {
     throw new Error('Path traversal attempt blocked');
   }
+  // A symlink inside the folder can still point outside it, so also check where the path really
+  // leads. For a path that doesn't exist yet, check its nearest existing parent.
+  if (fs.existsSync(BASE_DIR)) {
+    let probe = resolved;
+    while (probe !== BASE_DIR && !fs.existsSync(probe)) {
+      let dangling = false;
+      try { dangling = fs.lstatSync(probe).isSymbolicLink(); } catch { /* doesn't exist */ }
+      if (dangling) throw new Error('Path traversal attempt blocked');
+      probe = path.dirname(probe);
+    }
+    if (!isInside(fs.realpathSync(BASE_DIR), fs.realpathSync(probe))) {
+      throw new Error('Path traversal attempt blocked');
+    }
+  }
   return resolved;
+}
+
+/** For deleting, moving, renaming or sharing: the same checks, and the root folder itself is refused. */
+export function resolveEntryPath(userPath: string): string {
+  const resolved = resolveSafePath(userPath);
+  if (resolved === BASE_DIR) throw new Error("The root folder can't be changed");
+  return resolved;
+}
+
+/** A single file or folder name. Blocks separators and the ".." that path.join would walk up through. */
+export function isSafeName(name: unknown): name is string {
+  return typeof name === 'string' && name.trim() !== '' && name !== '.' && name !== '..'
+    && name.length <= 255 && !/[/\\\0]/.test(name);
+}
+
+/** A download filename header that keeps spaces and non-English names intact. */
+export function contentDisposition(type: 'inline' | 'attachment', filename: string): string {
+  const ascii = filename.replace(/[^\x20-\x7e]|["\\]/g, '_');
+  return `${type}; filename="${ascii}"; filename*=UTF-8''${encodeURIComponent(filename)}`;
 }
 
 export function toRelative(absolutePath: string): string {
@@ -80,14 +117,17 @@ export function getUniquePath(targetPath: string): string {
   return path.join(dir, `${base} (${i})${ext}`);
 }
 
-export function copyRecursive(src: string, dest: string) {
-  const stat = fs.statSync(src);
+/** Copies without blocking other requests. Refuses to copy a folder into itself, which would never end. */
+export async function copyRecursive(src: string, dest: string): Promise<void> {
+  if (isInside(src, dest)) throw new Error("Can't copy a folder into itself");
+  const stat = await fs.promises.lstat(src);
+  if (stat.isSymbolicLink()) return;
   if (stat.isDirectory()) {
-    fs.mkdirSync(dest, { recursive: true });
-    for (const child of fs.readdirSync(src)) {
-      copyRecursive(path.join(src, child), path.join(dest, child));
+    await fs.promises.mkdir(dest, { recursive: true });
+    for (const child of await fs.promises.readdir(src)) {
+      await copyRecursive(path.join(src, child), path.join(dest, child));
     }
   } else {
-    fs.copyFileSync(src, dest);
+    await fs.promises.copyFile(src, dest);
   }
 }

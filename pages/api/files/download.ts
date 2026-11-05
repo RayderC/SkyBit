@@ -1,10 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getIronSession } from 'iron-session';
-import { sessionOptions, SessionData } from '@/lib/session';
-import { resolveSafePath, IMAGE_EXTS, RAW_EXTS } from '@/lib/fs';
+import { getSession } from '@/lib/session';
+import { resolveSafePath, RAW_EXTS, contentDisposition } from '@/lib/fs';
 import fs from 'fs';
 import path from 'path';
-import archiver from 'archiver';
+import { pipeline } from 'stream/promises';
+import { ZipArchive } from 'archiver';
 
 export const config = { api: { responseLimit: false } };
 
@@ -31,13 +31,55 @@ function extractLargestJpeg(data: Buffer): Buffer | null {
   return best && best.length > 50 * 1024 ? best : null;
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // Allow token-based access for temp shares (no session required)
-  const token = req.query.token as string | undefined;
-  if (!token) {
-    const session = await getIronSession<SessionData>(req, res, sessionOptions);
-    if (!session.userId) return res.status(401).json({ error: 'Unauthorized' });
+const MIME: Record<string, string> = {
+  '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
+  '.gif': 'image/gif', '.webp': 'image/webp', '.svg': 'image/svg+xml',
+  '.avif': 'image/avif', '.bmp': 'image/bmp', '.tiff': 'image/tiff',
+  '.heic': 'image/heic', '.heif': 'image/heif',
+  '.mp4': 'video/mp4', '.webm': 'video/webm', '.mov': 'video/quicktime', '.mkv': 'video/x-matroska',
+  '.mp3': 'audio/mpeg', '.wav': 'audio/wav', '.ogg': 'audio/ogg', '.aac': 'audio/aac',
+  '.flac': 'audio/flac', '.m4a': 'audio/mp4', '.opus': 'audio/ogg',
+  '.pdf': 'application/pdf',
+};
+
+// SVG is left out on purpose: it can contain script, and opening an uploaded one directly would
+// run that script as whoever opened it. <img> tags still display it.
+const INLINE = new Set([
+  '.png', '.jpg', '.jpeg', '.gif', '.webp', '.avif', '.bmp', '.tiff', '.heic', '.heif',
+  '.mp4', '.webm', '.mov', '.mkv', '.mp3', '.wav', '.ogg', '.aac', '.flac', '.m4a', '.opus', '.pdf',
+]);
+
+/** Parses a single-range header. Browsers need this to seek in video, and iOS won't play video without it. */
+function parseRange(header: string | undefined, size: number): { start: number; end: number } | 'invalid' | null {
+  if (!header) return null;
+  const m = /^bytes=(\d*)-(\d*)$/.exec(header.trim());
+  if (!m || (m[1] === '' && m[2] === '')) return null;
+  let start: number;
+  let end: number;
+  if (m[1] === '') {
+    start = Math.max(0, size - Number(m[2]));
+    end = size - 1;
+  } else {
+    start = Number(m[1]);
+    end = m[2] === '' ? size - 1 : Math.min(Number(m[2]), size - 1);
   }
+  if (start > end || start >= size) return 'invalid';
+  return { start, end };
+}
+
+async function streamFile(res: NextApiResponse, file: string, opts?: { start: number; end: number }) {
+  try {
+    await pipeline(fs.createReadStream(file, opts), res);
+  } catch (e) {
+    // The browser closing the connection early (seeking, cancelling) is normal.
+    if ((e as NodeJS.ErrnoException).code !== 'ERR_STREAM_PREMATURE_CLOSE') console.error('[download]', e);
+    res.destroy();
+  }
+}
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const session = await getSession(req, res);
+  if (!session.userId) return res.status(401).json({ error: 'Unauthorized' });
 
   const filePath = (req.query.path as string) || '';
 
@@ -50,11 +92,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // ZIP download for directories
     if (stat.isDirectory()) {
       res.setHeader('Content-Type', 'application/zip');
-      res.setHeader(
-        'Content-Disposition',
-        `attachment; filename="${encodeURIComponent(path.basename(resolved))}.zip"`
-      );
-      const archive = archiver('zip', { zlib: { level: 6 } });
+      res.setHeader('Content-Disposition', contentDisposition('attachment', `${path.basename(resolved)}.zip`));
+      const archive = new ZipArchive({ zlib: { level: 6 } });
+      archive.on('error', (e) => { console.error('[download]', e); res.destroy(); });
+      res.on('close', () => { if (!res.writableFinished) archive.abort(); });
       archive.pipe(res);
       archive.directory(resolved, path.basename(resolved));
       await archive.finalize();
@@ -70,45 +111,45 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const jpeg = extractLargestJpeg(data);
         if (jpeg) {
           res.setHeader('Content-Type', 'image/jpeg');
-          res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(path.basename(resolved, ext))}.jpg"`);
+          res.setHeader('Content-Disposition', contentDisposition('inline', `${path.basename(resolved, ext)}.jpg`));
           res.setHeader('Content-Length', jpeg.length);
-          res.setHeader('Cache-Control', 'public, max-age=3600');
+          res.setHeader('Cache-Control', 'private, max-age=3600');
           res.end(jpeg);
           return;
         }
       } catch { /* fall through to raw download */ }
       // No embedded JPEG found — offer the file as a download
       res.setHeader('Content-Type', 'application/octet-stream');
-      res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(path.basename(resolved))}"`);
+      res.setHeader('Content-Disposition', contentDisposition('attachment', path.basename(resolved)));
       res.setHeader('Content-Length', stat.size);
-      fs.createReadStream(resolved).pipe(res);
+      await streamFile(res, resolved);
       return;
     }
 
-    const isInline =
-      IMAGE_EXTS.has(ext) ||
-      ['.mp4', '.webm', '.mov', '.mp3', '.wav', '.ogg', '.pdf'].includes(ext);
+    const isInline = INLINE.has(ext);
+    res.setHeader('Content-Disposition', contentDisposition(isInline ? 'inline' : 'attachment', path.basename(resolved)));
+    res.setHeader('Content-Type', MIME[ext] || 'application/octet-stream');
+    // Files are private, so shared caches like Cloudflare must never keep a copy.
+    res.setHeader('Cache-Control', isInline ? 'private, max-age=3600' : 'no-cache');
+    res.setHeader('Accept-Ranges', 'bytes');
+    if (ext === '.svg') res.setHeader('Content-Security-Policy', "sandbox; default-src 'none'; style-src 'unsafe-inline'; img-src data:");
 
-    res.setHeader(
-      'Content-Disposition',
-      `${isInline ? 'inline' : 'attachment'}; filename="${encodeURIComponent(path.basename(resolved))}"`
-    );
+    const range = parseRange(req.headers.range, stat.size);
+    if (range === 'invalid') {
+      res.setHeader('Content-Range', `bytes */${stat.size}`);
+      return res.status(416).end();
+    }
+    if (range) {
+      res.status(206);
+      res.setHeader('Content-Range', `bytes ${range.start}-${range.end}/${stat.size}`);
+      res.setHeader('Content-Length', range.end - range.start + 1);
+      await streamFile(res, resolved, range);
+      return;
+    }
     res.setHeader('Content-Length', stat.size);
-
-    const mimeMap: Record<string, string> = {
-      '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
-      '.gif': 'image/gif', '.webp': 'image/webp', '.svg': 'image/svg+xml',
-      '.avif': 'image/avif', '.bmp': 'image/bmp',
-      '.mp4': 'video/mp4', '.webm': 'video/webm', '.mov': 'video/quicktime',
-      '.mp3': 'audio/mpeg', '.wav': 'audio/wav', '.ogg': 'audio/ogg',
-      '.pdf': 'application/pdf',
-    };
-    res.setHeader('Content-Type', mimeMap[ext] || 'application/octet-stream');
-    res.setHeader('Cache-Control', isInline ? 'public, max-age=3600' : 'no-cache');
-
-    fs.createReadStream(resolved).pipe(res);
+    await streamFile(res, resolved);
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Error';
-    res.status(400).json({ error: msg });
+    if (res.headersSent) return void res.destroy();
+    res.status(400).json({ error: e instanceof Error ? e.message : 'Error' });
   }
 }

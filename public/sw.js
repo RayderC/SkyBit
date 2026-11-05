@@ -1,4 +1,4 @@
-const CACHE_NAME = 'skybit-v1';
+const CACHE_NAME = 'skybit-v2';
 const APP_SHELL = ['/', '/login', '/manifest.json', '/favicon.png'];
 
 // Install: cache app shell
@@ -29,8 +29,8 @@ self.addEventListener('fetch', (event) => {
   // For navigation requests: network first, fallback to cache
   if (event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request).catch(() =>
-        caches.match('/') || fetch(event.request)
+      fetch(event.request).catch(async () =>
+        (await caches.match('/')) ?? Response.error()
       )
     );
     return;

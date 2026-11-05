@@ -1,8 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import bcrypt from 'bcryptjs';
-import { getIronSession } from 'iron-session';
-import { sessionOptions } from '@/lib/session';
-import { countUsers, createUser } from '@/lib/db';
+import { getSession } from '@/lib/session';
+import { countUsers, createUser, getUserByUsername } from '@/lib/db';
+import { checkCsrf } from '@/lib/csrf';
+import { checkRateLimit } from '@/lib/rateLimit';
+import { clientIp } from '@/lib/clientIp';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'GET') {
@@ -10,30 +12,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === 'POST') {
+    if (!checkCsrf(req)) return res.status(403).json({ error: 'Forbidden' });
+    if (!checkRateLimit(`setup:${clientIp(req)}`, 10, 60_000)) {
+      return res.status(429).json({ error: 'Slow down' });
+    }
     if (countUsers() > 0) {
       return res.status(403).json({ error: 'Already set up' });
     }
-    const { username, password } = req.body as { username?: string; password?: string };
-    if (!username || !password) {
+    const { username, password } = (req.body ?? {}) as { username?: unknown; password?: unknown };
+    if (typeof username !== 'string' || typeof password !== 'string' || !username || !password) {
       return res.status(400).json({ error: 'Username and password are required' });
     }
-    if (username.trim().length < 2) {
-      return res.status(400).json({ error: 'Username must be at least 2 characters' });
+    const name = username.trim().toLowerCase();
+    if (name.length < 2 || name.length > 50) {
+      return res.status(400).json({ error: 'Username must be 2–50 characters' });
     }
-    if (password.length < 8) {
-      return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    if (password.length < 8 || password.length > 72) {
+      return res.status(400).json({ error: 'Password must be 8–72 characters' });
     }
 
-    const hash = bcrypt.hashSync(password, 12);
-    createUser(username.trim().toLowerCase(), hash, 'admin');
+    // No await between the check above and this line, so two requests can't both become admin.
+    createUser(name, bcrypt.hashSync(password, 12), 'admin');
 
-    const session = await getIronSession<{ userId?: number; username?: string; role?: string }>(req, res, sessionOptions);
-    const users = (await import('@/lib/db')).listUsers();
-    const created = users.find(u => u.username.toLowerCase() === username.trim().toLowerCase());
+    const created = getUserByUsername(name);
     if (created) {
+      const session = await getSession(req, res);
       session.userId = created.id;
       session.username = created.username;
       session.role = 'admin';
+      session.tokenVersion = 0;
       await session.save();
     }
 
