@@ -161,7 +161,7 @@ export function SsoSetup({ appName }: { appName: string }) {
   };
   return (
     <div className="card ops-card" id="sso-setup">
-      <h3 className="ops-title">Sign in with Amethyst</h3>
+      <div className="ops-head"><h3 className="ops-title">Sign in with Amethyst</h3><span className={`ops-badge${s.enabled ? " on" : ""}`}>{s.enabled ? "On" : "Off"}</span></div>
       <p className="ops-hint">
         Adds a <b>Sign in with Amethyst</b> button to the login page. It signs in the {appName} account with the same username as the
         Amethyst account, so make the accounts here first. Passwords keep working too.
