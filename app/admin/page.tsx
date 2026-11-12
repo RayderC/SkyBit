@@ -102,11 +102,11 @@ export default function AdminPage() {
           <form onSubmit={handleAdd} style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
             <div className="form-group" style={{ flex: '1 1 160px' }}>
               <label className="form-label">Username</label>
-              <input name="username" className="form-input" required />
+              <input data-bwignore="true" data-1p-ignore="true" data-lpignore="true" autoComplete="off" name="username" className="form-input" required />
             </div>
             <div className="form-group" style={{ flex: '1 1 160px' }}>
               <label className="form-label">Password</label>
-              <input name="password" type="password" className="form-input" required />
+              <input data-bwignore="true" data-1p-ignore="true" data-lpignore="true" autoComplete="new-password" name="password" type="password" className="form-input" required />
             </div>
             <div className="form-group" style={{ flex: '1 1 120px' }}>
               <label className="form-label">Role</label>
@@ -185,11 +185,11 @@ export default function AdminPage() {
             <form onSubmit={handleEdit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div className="form-group">
                 <label className="form-label">New Username (leave blank to keep)</label>
-                <input name="username" className="form-input" placeholder={editUser.username} />
+                <input data-bwignore="true" data-1p-ignore="true" data-lpignore="true" autoComplete="off" name="username" className="form-input" placeholder={editUser.username} />
               </div>
               <div className="form-group">
                 <label className="form-label">New Password (leave blank to keep)</label>
-                <input name="password" type="password" className="form-input" placeholder="New password" />
+                <input data-bwignore="true" data-1p-ignore="true" data-lpignore="true" autoComplete="new-password" name="password" type="password" className="form-input" placeholder="New password" />
               </div>
               <div className="form-group">
                 <label className="form-label">Role</label>

@@ -45,7 +45,7 @@ function ShareContent() {
         {!error && locked ? (
           <form onSubmit={unlock} className="share-unlock">
             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 12, textAlign: 'center' }}>This link has a password. Ask whoever sent it.</p>
-            <input className="form-input" type="password" aria-label="Link password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} autoFocus />
+            <input data-bwignore="true" data-1p-ignore="true" data-lpignore="true" autoComplete="new-password" className="form-input" type="password" aria-label="Link password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} autoFocus />
             {wrong && <p style={{ color: 'var(--danger)', fontSize: '0.85rem', marginTop: 8 }}>{wrong}</p>}
             <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: 12 }} disabled={!password}>Unlock</button>
           </form>

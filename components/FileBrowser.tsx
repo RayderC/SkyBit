@@ -280,7 +280,7 @@ export default function FileBrowser({ folder }: Props) {
       <div className="browser-toolbar">
         <div className="search-bar">
           <span className="search-icon">🔍</span>
-          <input
+          <input data-bwignore="true" data-1p-ignore="true" data-lpignore="true" autoComplete="off"
             type="text"
             placeholder="Search files..."
             value={search}
@@ -344,7 +344,7 @@ export default function FileBrowser({ folder }: Props) {
       {/* New folder inline form */}
       {newFolderMode && (
         <form onSubmit={handleNewFolder} style={{ display: 'flex', gap: 8, marginBottom: 12, alignItems: 'center' }}>
-          <input
+          <input data-bwignore="true" data-1p-ignore="true" data-lpignore="true" autoComplete="off"
             className="form-input"
             value={newFolderName}
             onChange={e => setNewFolderName(e.target.value)}
@@ -361,7 +361,7 @@ export default function FileBrowser({ folder }: Props) {
       {/* New file inline form */}
       {newFileMode && (
         <form onSubmit={handleNewFile} style={{ display: 'flex', gap: 8, marginBottom: 12, alignItems: 'center' }}>
-          <input
+          <input data-bwignore="true" data-1p-ignore="true" data-lpignore="true" autoComplete="off"
             className="form-input"
             value={newFileName}
             onChange={e => setNewFileName(e.target.value)}
@@ -506,7 +506,7 @@ export default function FileBrowser({ folder }: Props) {
               <>
                 <div className="form-group" style={{ marginBottom: 20 }}>
                   <label className="form-label">Expires in (minutes)</label>
-                  <input
+                  <input data-bwignore="true" data-1p-ignore="true" data-lpignore="true" autoComplete="off"
                     type="number"
                     min={1}
                     value={shareExpiry}
@@ -516,7 +516,7 @@ export default function FileBrowser({ folder }: Props) {
                 </div>
                 <div className="form-group" style={{ marginBottom: 20 }}>
                   <label className="form-label" htmlFor="share-password">Password (optional)</label>
-                  <input id="share-password" type="text" autoComplete="off" maxLength={72} value={sharePassword}
+                  <input data-bwignore="true" data-1p-ignore="true" data-lpignore="true" id="share-password" type="text" autoComplete="off" maxLength={72} value={sharePassword}
                     onChange={e => setSharePassword(e.target.value)} className="form-input" placeholder="Leave empty for no password" />
                   <span className="ops-hint" style={{ display: 'block', marginTop: 6 }}>With a password, the link shows nothing, not even the file name, until it&apos;s typed in. Send the password separately.</span>
                 </div>

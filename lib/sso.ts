@@ -4,14 +4,15 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { getConfig, getUserByUsername, setConfig } from "./db";
 import { getSession } from "./session";
 import { recordSignIn } from "./signIns";
-import { isGoodSecret, originFrom, verifyPass } from "./ssoCore";
+import { amethystOrigin, isGoodSecret, originFrom, verifyPass } from "./ssoCore";
 
 export const SSO_APP = "skybit";
 const COOKIE = "skybit_sso_state";
 
 export function ssoConfig(): { url: string; secret: string; fromEnv: boolean } | null {
   const envUrl = process.env.AMETHYST_URL, envSecret = process.env.AMETHYST_SSO_SECRET;
-  if (envUrl && isGoodSecret(envSecret)) return { url: envUrl.replace(/\/+$/, ""), secret: envSecret.trim(), fromEnv: true };
+  const envOrigin = amethystOrigin(envUrl);
+  if (envOrigin && isGoodSecret(envSecret)) return { url: envOrigin, secret: envSecret.trim(), fromEnv: true };
   const url = getConfig("sso_url"), secret = getConfig("sso_secret");
   return url && isGoodSecret(secret) ? { url, secret: secret.trim(), fromEnv: false } : null;
 }
