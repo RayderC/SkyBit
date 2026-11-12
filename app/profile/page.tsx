@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import { SignInsCard } from '@/components/OpsCards';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -80,6 +81,8 @@ export default function ProfilePage() {
             {loading ? 'Saving...' : 'Save Changes'}
           </button>
         </form>
+
+        <SignInsCard />
 
         <div style={{ borderTop: '1px solid var(--border)', marginTop: 20, paddingTop: 16, display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
           {user.role === 'admin' && (

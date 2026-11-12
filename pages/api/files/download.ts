@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getSession } from '@/lib/session';
-import { resolveSafePath, RAW_EXTS, contentDisposition } from '@/lib/fs';
+import { resolveSafePath, RAW_EXTS, contentDisposition, BASE_DIR, TRASH_NAME } from '@/lib/fs';
 import fs from 'fs';
 import path from 'path';
 import { pipeline } from 'stream/promises';
@@ -97,7 +97,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       archive.on('error', (e) => { console.error('[download]', e); res.destroy(); });
       res.on('close', () => { if (!res.writableFinished) archive.abort(); });
       archive.pipe(res);
-      archive.directory(resolved, path.basename(resolved));
+      // Downloading the whole root leaves the trash out.
+      archive.directory(resolved, path.basename(resolved), (entry: { name: string }) =>
+        resolved === BASE_DIR && entry.name.split('/').includes(TRASH_NAME) ? false : entry);
       await archive.finalize();
       return;
     }

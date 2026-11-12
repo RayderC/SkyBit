@@ -7,6 +7,10 @@ export const BASE_DIR = process.env.BASE_DIRECTORY
 
 const isInside = (base: string, p: string) => p === base || p.startsWith(base + path.sep);
 
+/** Deleted things wait here. It's hidden from the browser, and no file path from a request can reach it. */
+export const TRASH_NAME = '.skybit-trash';
+export const TRASH_DIR = path.join(BASE_DIR, TRASH_NAME);
+
 export function resolveSafePath(userPath: string): string {
   if (userPath != null && typeof userPath !== 'string') throw new Error('Invalid path');
   if ((userPath || '').includes('\0')) throw new Error('Invalid path');
@@ -15,6 +19,7 @@ export function resolveSafePath(userPath: string): string {
   if (!isInside(BASE_DIR, resolved)) {
     throw new Error('Path traversal attempt blocked');
   }
+  if (isInside(TRASH_DIR, resolved)) throw new Error('That is in the trash');
   // A symlink inside the folder can still point outside it, so also check where the path really
   // leads. For a path that doesn't exist yet, check its nearest existing parent.
   if (fs.existsSync(BASE_DIR)) {

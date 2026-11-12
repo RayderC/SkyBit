@@ -3,6 +3,7 @@ import { checkCsrf } from '@/lib/csrf';
 import { getSession } from '@/lib/session';
 import { resolveEntryPath } from '@/lib/fs';
 import fs from 'fs';
+import { moveToTrash } from '@/lib/trash';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).end();
@@ -19,7 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   for (const p of paths) {
     try {
       const resolved = resolveEntryPath(p);
-      if (fs.existsSync(resolved)) fs.rmSync(resolved, { recursive: true, force: true });
+      if (fs.existsSync(resolved)) await moveToTrash(resolved, session.username ?? '');
     } catch (e) {
       errors.push(e instanceof Error ? e.message : String(e));
     }

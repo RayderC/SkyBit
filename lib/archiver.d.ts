@@ -4,7 +4,7 @@ declare module "archiver" {
   export class ZipArchive extends Transform {
     constructor(options?: { zlib?: { level?: number } });
     append(source: Buffer | string, data: { name: string }): this;
-    directory(dirpath: string, destpath: string | false): this;
+    directory(dirpath: string, destpath: string | false, data?: (entry: { name: string }) => false | { name: string }): this;
     finalize(): Promise<void>;
     abort(): this;
   }

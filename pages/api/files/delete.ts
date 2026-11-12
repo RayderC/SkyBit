@@ -3,6 +3,7 @@ import { checkCsrf } from '@/lib/csrf';
 import { getSession } from '@/lib/session';
 import { resolveEntryPath } from '@/lib/fs';
 import fs from 'fs';
+import { moveToTrash } from '@/lib/trash';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).end();
@@ -16,8 +17,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const resolved = resolveEntryPath(filePath);
     if (!fs.existsSync(resolved)) return res.status(404).json({ error: 'Not found' });
-    fs.rmSync(resolved, { recursive: true, force: true });
-    res.json({ ok: true });
+    await moveToTrash(resolved, session.username ?? '');
+    res.json({ ok: true, trashed: true });
   } catch (e: unknown) {
     res.status(400).json({ error: e instanceof Error ? e.message : 'Error' });
   }

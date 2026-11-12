@@ -19,8 +19,8 @@ export default function DeleteModal({ items, message, onConfirm, onCancel }: Pro
   }, [onCancel, onConfirm]);
 
   const defaultMsg = items.length === 1
-    ? <>Are you sure you want to delete <strong>{items[0].split('/').pop() || items[0]}</strong>? This cannot be undone.</>
-    : <>Are you sure you want to delete <strong>{items.length} items</strong>? This cannot be undone.</>;
+    ? <>Are you sure you want to delete <strong>{items[0].split('/').pop() || items[0]}</strong>? It goes to the trash for 30 days, so you can restore it.</>
+    : <>Are you sure you want to delete <strong>{items.length} items</strong>? They go to the trash for 30 days, so you can restore them.</>;
 
   return (
     <div className="modal-overlay" onClick={onCancel}>

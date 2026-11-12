@@ -1,6 +1,6 @@
 'use client';
 import { useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 
 function ShareContent() {
   const params = useSearchParams();
@@ -9,17 +9,32 @@ function ShareContent() {
 
   const [filename, setFilename] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [locked, setLocked] = useState(false);
+  const [password, setPassword] = useState('');
+  const [wrong, setWrong] = useState('');
 
-  useEffect(() => {
+  const load = useCallback(() => {
     if (!token) return;
     fetch(`/api/temp-shares/info?token=${encodeURIComponent(token)}`)
       .then(r => r.json())
       .then(data => {
         if (data.error) setError(data.error);
-        else setFilename(data.filename);
+        else if (data.locked) setLocked(true);
+        else { setLocked(false); setFilename(data.filename); }
       })
       .catch(() => setError('Could not load share info.'));
   }, [token]);
+  useEffect(() => { load(); }, [load]);
+
+  async function unlock(e: React.FormEvent) {
+    e.preventDefault();
+    setWrong('');
+    const r = await fetch('/api/temp-shares/unlock', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token, password }) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) { setWrong(j.error || 'That didn\u2019t work'); return; }
+    setPassword('');
+    load();
+  }
 
   return (
     <div className="auth-page">
@@ -27,7 +42,14 @@ function ShareContent() {
         <div className="auth-logo" style={{ fontSize: '1.4rem' }}>SkyBit</div>
         <p className="auth-subtitle">// shared file</p>
 
-        {error ? (
+        {!error && locked ? (
+          <form onSubmit={unlock} className="share-unlock">
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 12, textAlign: 'center' }}>This link has a password. Ask whoever sent it.</p>
+            <input className="form-input" type="password" aria-label="Link password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} autoFocus />
+            {wrong && <p style={{ color: 'var(--danger)', fontSize: '0.85rem', marginTop: 8 }}>{wrong}</p>}
+            <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: 12 }} disabled={!password}>Unlock</button>
+          </form>
+        ) : error ? (
           <p style={{ color: 'var(--danger)', fontSize: '0.88rem', textAlign: 'center', marginBottom: 24 }}>
             {error}
           </p>
@@ -49,7 +71,7 @@ function ShareContent() {
           </div>
         )}
 
-        {!error && (
+        {!error && !locked && (
           <a href={downloadUrl} download className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
             Download File
           </a>

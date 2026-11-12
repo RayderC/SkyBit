@@ -8,6 +8,8 @@ export interface SessionData {
   role?: 'admin' | 'mod' | 'user';
   /** The user's tokenVersion at sign-in. Changing a password bumps it, which ends other sessions. */
   tokenVersion?: number;
+  /** Password-protected share links this visitor has unlocked. Works without an account. */
+  unlockedShares?: string[];
 }
 
 const isBuild = process.env.NEXT_PHASE === 'phase-production-build';

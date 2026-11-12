@@ -5,6 +5,7 @@ import { checkCsrf } from '@/lib/csrf';
 import { checkRateLimit } from '@/lib/rateLimit';
 import { clientIp } from '@/lib/clientIp';
 import bcrypt from 'bcryptjs';
+import { recordSignIn } from '@/lib/signIns';
 
 // Compared against when the username doesn't exist, so a miss takes as long as a wrong password.
 const DUMMY_HASH = bcrypt.hashSync('not-a-real-password', 12);
@@ -32,6 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const user = getUserByUsername(name);
   const matches = await bcrypt.compare(password, user?.password ?? DUMMY_HASH);
   if (!user || !matches) {
+    if (user) recordSignIn(user.id, req, false);
     return res.status(401).json({ error: 'Invalid username or password' });
   }
 
@@ -41,6 +43,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   session.role = user.role;
   session.tokenVersion = user.tokenVersion ?? 0;
   await session.save();
+  recordSignIn(user.id, req);
 
   res.json({ ok: true, username: user.username, role: user.role });
 }

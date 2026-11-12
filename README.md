@@ -19,6 +19,7 @@ A self-hosted, web-based personal file explorer with a cyberpunk aesthetic. Uplo
 - **Rename, move, copy** — inline rename and a folder-tree picker modal for move/copy
 - **Create** — new folders and new empty files (any extension) from the toolbar
 - **Delete** — with a confirmation modal so nothing disappears by accident
+- **Trash** — deleted files and folders go to a hidden trash folder for 30 days. Admins and mods open **Trash** from the toolbar to restore one to where it was, delete it for good, or empty the trash
 
 ### Multi-Select & Bulk Actions
 - Toggle selection mode to check multiple files/folders
@@ -39,6 +40,7 @@ A self-hosted, web-based personal file explorer with a cyberpunk aesthetic. Uplo
 
 ### Sharing
 - **Temp share links** — generate time-limited, token-based download links
+- **Link passwords** — optionally give a link a password. Until it's typed in, the link shows nothing, not even the file name
 - Share link always opens a preview page first — shows the exact filename before the recipient clicks download (no automatic download on open)
 - Recipients need no account; links expire automatically
 - Admins can view, extend, or revoke all active share links
@@ -49,6 +51,11 @@ A self-hosted, web-based personal file explorer with a cyberpunk aesthetic. Uplo
   - **mod** — all file operations (upload, rename, delete, move, copy, share)
   - **user** — read-only: browse, download, view
 - Admin panel at `/admin` for adding, editing, and deleting accounts
+
+### Backups, updates and sign-ins
+- **Backups** — every night SkyBit copies `data.json` (accounts, share links, the trash list, settings) into `/app/config/backups` and keeps the last 7. The admin page has **Download backup** and restore from a file or a saved copy, with a copy saved before every restore. Your files aren't included; back up the files folder your own way
+- **Update notice** — the admin page says when a newer image is on Docker Hub (checked once a day; nothing about you is sent)
+- **Sign-ins** — your profile lists recent sign-ins and wrong-password tries, with **Sign out everywhere else**. Admins can sign anyone out of every device
 
 ### Mobile & PWA
 - Responsive layout — works on phones and tablets

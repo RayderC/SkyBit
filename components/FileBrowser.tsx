@@ -52,6 +52,8 @@ export default function FileBrowser({ folder }: Props) {
   const [shareTarget, setShareTarget] = useState<string | null>(null);
   const [shareExpiry, setShareExpiry] = useState(60);
   const [shareLink, setShareLink] = useState('');
+  const [sharePassword, setSharePassword] = useState('');
+  const [shareError, setShareError] = useState('');
 
   // Drag-drop
   const dropRef = useRef<HTMLDivElement>(null);
@@ -195,10 +197,12 @@ export default function FileBrowser({ folder }: Props) {
     const res = await fetch('/api/temp-shares/create', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ path: shareTarget, expiresIn: shareExpiry }),
+      body: JSON.stringify({ path: shareTarget, expiresIn: shareExpiry, password: sharePassword }),
     });
     const data = await res.json();
+    setShareError(data.error ?? '');
     if (data.token) {
+      setSharePassword('');
       const url = `${window.location.origin}/share?token=${data.token}`;
       setShareLink(url);
     }
@@ -283,6 +287,8 @@ export default function FileBrowser({ folder }: Props) {
             onChange={e => setSearch(e.target.value)}
           />
         </div>
+
+        {canWrite && <a href="/trash" className="btn btn-ghost btn-sm trash-link" title="Deleted files, kept 30 days">🗑 Trash</a>}
 
         {/* View toggle */}
         <div className="view-toggle">
@@ -508,6 +514,13 @@ export default function FileBrowser({ folder }: Props) {
                     className="form-input"
                   />
                 </div>
+                <div className="form-group" style={{ marginBottom: 20 }}>
+                  <label className="form-label" htmlFor="share-password">Password (optional)</label>
+                  <input id="share-password" type="text" autoComplete="off" maxLength={72} value={sharePassword}
+                    onChange={e => setSharePassword(e.target.value)} className="form-input" placeholder="Leave empty for no password" />
+                  <span className="ops-hint" style={{ display: 'block', marginTop: 6 }}>With a password, the link shows nothing, not even the file name, until it&apos;s typed in. Send the password separately.</span>
+                </div>
+                {shareError && <p className="ops-bad" style={{ marginBottom: 12 }}>{shareError}</p>}
                 <div className="modal-actions">
                   <button className="btn btn-ghost" onClick={() => setShareTarget(null)}>Cancel</button>
                   <button className="btn btn-primary" onClick={handleShare}>Generate Link</button>

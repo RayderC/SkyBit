@@ -20,13 +20,37 @@ export interface TempShare {
   filepath: string;
   expires_at: string;
   created_at: string;
+  /** bcrypt hash. When set, the link asks for a password before it shows or sends anything. */
+  passwordHash?: string;
 }
 
-interface DbData {
+/** Something deleted, waiting in the trash for 30 days. The item itself is in .skybit-trash/<id>/. */
+export interface TrashItem {
+  id: string;
+  name: string;
+  /** Where it was, relative to the files folder. */
+  from: string;
+  isDir: boolean;
+  size: number | null;
+  deletedAt: string;
+  deletedBy: string;
+}
+
+export interface SignInRecord {
+  userId: number;
+  at: string;
+  ip: string | null;
+  device: string;
+  ok: boolean;
+}
+
+export interface DbData {
   users: User[];
   tempShares: TempShare[];
   config: Record<string, string>;
   nextUserId: number;
+  trash?: TrashItem[];
+  signIns?: SignInRecord[];
 }
 
 // ── Storage path ────────────────────────────────────────────────────────────
@@ -36,6 +60,9 @@ const dbDir = process.env.DATABASE_PATH
   : path.join(process.cwd(), 'config');
 
 const dbFile = path.join(dbDir, 'data.json');
+
+/** The file that holds accounts, shares, the trash list and settings. Backups copy it. */
+export const DATA_FILE = dbFile;
 
 if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
 
@@ -153,6 +180,29 @@ export function updateUser(
   write(data);
 }
 
+/** Reads everything. For the trash, sign-ins and backups. */
+export function readData(): DbData {
+  return read();
+}
+
+/** Reads, lets `fn` change it, and writes it back. Returns what `fn` returns. */
+export function updateData<T>(fn: (d: DbData) => T): T {
+  const data = read();
+  const out = fn(data);
+  write(data);
+  return out;
+}
+
+/** Ends every session this person has. Returns the new version. */
+export function bumpTokenVersion(id: number): number {
+  return updateData(d => {
+    const u = d.users.find(x => x.id === id);
+    if (!u) throw new Error('User not found');
+    u.tokenVersion = (u.tokenVersion ?? 0) + 1;
+    return u.tokenVersion;
+  });
+}
+
 export function otherAdminExists(id: number): boolean {
   return read().users.some(u => u.role === 'admin' && u.id !== id);
 }
@@ -165,9 +215,9 @@ export function deleteUser(id: number): void {
 
 // ── Temp Shares API ───────────────────────────────────────────────────────────
 
-export function createShare(token: string, filepath: string, expiresAt: string): void {
+export function createShare(token: string, filepath: string, expiresAt: string, passwordHash?: string): void {
   const data = read();
-  data.tempShares.push({ token, filepath, expires_at: expiresAt, created_at: new Date().toISOString() });
+  data.tempShares.push({ token, filepath, expires_at: expiresAt, created_at: new Date().toISOString(), ...(passwordHash ? { passwordHash } : {}) });
   write(data);
 }
 

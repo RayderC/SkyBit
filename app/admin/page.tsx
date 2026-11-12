@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import DeleteModal from '@/components/DeleteModal';
+import { BackupsCard, UpdateNotice } from '@/components/OpsCards';
 
 interface User { id: number; username: string; role: string; created_at: string; }
 
@@ -91,6 +92,7 @@ export default function AdminPage() {
         </div>
       </div>
 
+      <UpdateNotice />
       {error && <div className="flash flash-error" onClick={() => setError('')}>{error}</div>}
       {success && <div className="flash flash-success" onClick={() => setSuccess('')}>{success}</div>}
 
@@ -155,6 +157,13 @@ export default function AdminPage() {
                   <div style={{ display: 'flex', gap: 6 }}>
                     <button className="btn btn-secondary btn-sm" onClick={() => setEditUser(u)}>Edit</button>
                     {u.id !== me?.id && (
+                      <button className="btn btn-ghost btn-sm" onClick={async () => {
+                        if (!confirm(`Sign ${u.username} out of every device?`)) return;
+                        const r = await fetch('/api/users/sign-out', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: u.id }) });
+                        if (r.ok) setSuccess(`${u.username} is signed out everywhere.`); else setError((await r.json()).error || 'Failed');
+                      }}>Sign out</button>
+                    )}
+                    {u.id !== me?.id && (
                       <button className="btn btn-danger btn-sm" onClick={() => setDeleteUser(u)}>Delete</button>
                     )}
                   </div>
@@ -165,6 +174,8 @@ export default function AdminPage() {
         </table>
         </div>
       </div>
+
+      <BackupsCard />
 
       {editUser && (
         <div className="modal-overlay" onClick={() => setEditUser(null)}>

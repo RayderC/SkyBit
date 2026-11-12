@@ -2,7 +2,7 @@ export const config = { api: { responseLimit: false } };
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getSession } from '@/lib/session';
-import { resolveSafePath, getFileType, detectImageFolder, formatSize, ensureBaseDir } from '@/lib/fs';
+import { resolveSafePath, getFileType, detectImageFolder, formatSize, ensureBaseDir, BASE_DIR, TRASH_NAME } from '@/lib/fs';
 import fs from 'fs';
 import path from 'path';
 
@@ -20,7 +20,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ error: 'Folder not found' });
     }
 
-    const entries = await fs.promises.readdir(dirPath, { withFileTypes: true });
+    // The trash lives in the root folder but isn't shown there.
+    const entries = (await fs.promises.readdir(dirPath, { withFileTypes: true })).filter(e => !(dirPath === BASE_DIR && e.name === TRASH_NAME));
     const files = (await Promise.all(
       entries.map(async (e) => {
         const fullPath = path.join(dirPath, e.name);

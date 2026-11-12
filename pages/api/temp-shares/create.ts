@@ -5,6 +5,7 @@ import { createShare } from '@/lib/db';
 import { resolveEntryPath } from '@/lib/fs';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
+import bcrypt from 'bcryptjs';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).end();
@@ -14,7 +15,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(403).json({ error: 'Forbidden' });
   }
 
-  const { path: filePath, expiresIn } = req.body as { path: string; expiresIn: number };
+  const { path: filePath, expiresIn, password } = req.body as { path: string; expiresIn: number; password?: unknown };
+  if (password != null && password !== '' && (typeof password !== 'string' || password.length < 4 || password.length > 72)) {
+    return res.status(400).json({ error: 'The link password needs 4 to 72 characters' });
+  }
   // Up to a year. A huge value would produce an invalid date.
   if (!filePath || !Number.isFinite(expiresIn) || expiresIn < 1 || expiresIn > 525_600) {
     return res.status(400).json({ error: 'Invalid params' });
@@ -26,8 +30,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const token = uuidv4();
     const expiresAt = new Date(Date.now() + expiresIn * 60 * 1000).toISOString();
-    createShare(token, filePath, expiresAt);
-    res.json({ token, expiresAt });
+    createShare(token, filePath, expiresAt, typeof password === 'string' && password ? await bcrypt.hash(password, 10) : undefined);
+    res.json({ token, expiresAt, hasPassword: !!password });
   } catch (e: unknown) {
     res.status(400).json({ error: e instanceof Error ? e.message : 'Error' });
   }

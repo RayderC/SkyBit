@@ -36,7 +36,8 @@ COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
 # Create dirs; ownership is fixed at runtime by entrypoint
-RUN mkdir -p /data /app/config
+RUN mkdir -p /data /app/config \
+    && date -u +%Y-%m-%dT%H:%M:%SZ > /app/.build-time
 
 EXPOSE 7070
 

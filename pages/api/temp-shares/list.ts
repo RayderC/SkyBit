@@ -8,5 +8,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(403).json({ error: 'Forbidden' });
   }
   cleanupExpiredShares();
-  res.json(listShares());
+  // The password itself never leaves the server, only whether there is one.
+  res.json(listShares().map(({ passwordHash, ...s }) => ({ ...s, hasPassword: !!passwordHash })));
 }

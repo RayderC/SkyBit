@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getShare } from '@/lib/db';
+import { getSession } from '@/lib/session';
 import { resolveSafePath, contentDisposition } from '@/lib/fs';
 import fs from 'fs';
 import path from 'path';
@@ -22,6 +23,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!share) return res.status(404).json({ error: 'Share not found' });
   if (new Date(share.expires_at) < new Date()) {
     return res.status(410).json({ error: 'Link has expired' });
+  }
+  if (share.passwordHash) {
+    const session = await getSession(req, res);
+    if (!session.unlockedShares?.includes(token)) return res.status(401).json({ error: 'This link needs its password' });
   }
 
   try {
