@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import DeleteModal from '@/components/DeleteModal';
-import { BackupsCard, UpdateNotice } from '@/components/OpsCards';
+import { BackupsCard, SsoSetup, UpdateNotice } from '@/components/OpsCards';
 
 interface User { id: number; username: string; role: string; created_at: string; }
 
@@ -175,6 +175,7 @@ export default function AdminPage() {
         </div>
       </div>
 
+      <SsoSetup appName="SkyBit" />
       <BackupsCard />
 
       {editUser && (

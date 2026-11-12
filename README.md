@@ -108,6 +108,12 @@ Set `SECRET_KEY` in a `.env` file next to your compose file and reference it wit
 
 ---
 
+## Sign in with Amethyst (optional)
+
+If you run [Amethyst](https://github.com/RayderC/Amethyst), people can sign in here with their Amethyst account. In Amethyst, open **Dashboard → System** and turn on shared login. Then on this app's admin page, under **Sign in with Amethyst**, put in Amethyst's address and paste the shared secret. The login page gets a **Sign in with Amethyst** button.
+
+It signs in the account here with the same username as the Amethyst one, so create the accounts here first. Passwords keep working. You can also set `AMETHYST_URL` and `AMETHYST_SSO_SECRET` on the container instead.
+
 ## Environment Variables
 
 | Variable | Default | Description |

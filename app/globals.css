@@ -1188,3 +1188,5 @@ h1, h2, h3, h4 {
 .trash-name { font-family: var(--font-mono); font-size: 0.9rem; word-break: break-all; }
 .trash-item .ops-actions { margin: 0; }
 .share-unlock { margin-bottom: 8px; }
+.ops-form { display: flex; flex-direction: column; gap: 8px; }
+.sso-btn { display: flex; justify-content: center; text-decoration: none; margin-top: 10px; width: 100%; }
