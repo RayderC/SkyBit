@@ -46,7 +46,8 @@ export default function AdminPage() {
   async function handleEdit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    await fetch('/api/users/edit', {
+    setError(''); setSuccess('');
+    const res = await fetch('/api/users/edit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -56,16 +57,23 @@ export default function AdminPage() {
         role: fd.get('role') || undefined,
       }),
     });
+    // Show why a change was refused (a taken name, the last admin) instead of claiming it worked.
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) { setError(data.error || 'Could not update that user'); return; }
     setSuccess('User updated'); setEditUser(null); loadUsers();
   }
 
   async function handleDelete() {
-    await fetch('/api/users/delete', {
+    setError('');
+    const res = await fetch('/api/users/delete', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: deleteUser!.id }),
     });
-    setDeleteUser(null); loadUsers();
+    const data = await res.json().catch(() => ({}));
+    setDeleteUser(null);
+    if (!res.ok) { setError(data.error || 'Could not delete that user'); return; }
+    loadUsers();
   }
 
   const ROLES = ['admin', 'mod', 'user'];
